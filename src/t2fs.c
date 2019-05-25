@@ -1,7 +1,7 @@
 
 /**
 */
-#include "t2fs.h"
+#include "../include/t2fs.h"
 
 /*-----------------------------------------------------------------------------
 Função:	Informa a identificação dos desenvolvedores do T2FS.

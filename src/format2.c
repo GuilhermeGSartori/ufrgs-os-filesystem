@@ -67,6 +67,8 @@ int format2(int sectors_per_block)
 
 		partition_size[i] = end[i] - start[i] + 1;
 		partition_size[i] /= sectors_per_block;
+		printf("start: %d\n", start[i]);
+		printf("end: %d\n", end[i]);
 
 		for(j = 0; j < 24; j++)
 			partition_names[i][j] = mbr[i_byte_adrs+j];
@@ -76,7 +78,31 @@ int format2(int sectors_per_block)
 
 	unsigned int bitmap_start;
 	unsigned int bitmap_end;
-	
+
+	/*
+      *Superblock Structure:
+       *The superblock is made of 2 sectors
+       *First Sector:
+        *the first 4 bytes are used to store the start byte of the bitmap
+        *the next 4 bytes are used to store the end byte of the bitmap
+        *the rest of the sector is for the bitmap itself
+       *Second Sector:
+        *the first 4 bytes are used to store the sectors per block information
+        *the next 4 bytes are used to store the start sector of the partition (root dir) 
+        *the next 4 bytes are used to store the last sector of the partition
+        *armazenar entrada do dir raiz aqui!
+        *armazenar tamanho de um hash
+        *armazenar quantos setores livres tem ainda?, não...
+	*/
+	//boot lê o superbloco e armazena em globais as infos
+	//em um diretório vão caber 16 arquivos. Cada entrada vai ter 
+	//32 bytes -> posição do índice vai ser 4 bytes; 1 tipo; 4 tamanho; nome 22(23) bytes
+	//tamanho da entrada é verificável ao dar sizeof na struct...  Acessar dados é só acessar dados de struct...
+	//SÓ SE NÃO PODE MUDAR, DAÍ EU VOU PRECISAR DO TAMANHO, PRA SABER ONDE FICAR OS
+	//BYTES DE ÍNDICE
+
+	//format vai criar todos os roots mas te dropa no root da partição 0
+
 	for(i = 0; i < partition_count; i++)
 	{
 		bitmap_start = 8;
@@ -96,44 +122,48 @@ int format2(int sectors_per_block)
 			first_sector[j] = (BYTE) bitmap_end >> (24-(8*(j-4))) & 0xFF;
 
 		for(j = (int) bitmap_start; j < (int) bitmap_end; j++)	
-			first_sector[j] = 0;
+		{
+			if(j == bitmap_start)
+				first_sector[j] = 3; //sets the first  2 bits of the bitmap to 1 (byte 1 is 0000 0011 = 3...), since
+			                         //the first block is used for the superblock itself and the second for the root dir.
+									 //1 byte (8 numbers in b) to hexa is 2. 0000 0011 becomes 02
+			else
+				first_sector[j] = 0; //to actually visualize the bitmap area, set this to 1, this confirms the
+			                         //theory that the bitmap is correctly mapped to the number of blocks.
+		}
+		//a cada 16 linhas no disco fecha um setor!, cada xxxx são 2 bytes em binário
+		//a pilha é que o MBR é no zero, e o star das partições começam no lugar certo
 		//meter isso na função de write blocks dps
-		//tô considerando que o write traduz pra hexa... se não, eu vou ter
-		//q rever isso tudo... deve ser coisa do arquivo na real, nao existe
-		//isso de traduzir, dado é dado, porra, é só questão de visualização
+
 		write_sector(start[i], first_sector);
 
-		for(j = 0; j < sizeof(unsigned int); j++)
+		for(j = 0; j < sizeof(unsigned int); j++)//big endian storing
 			second_sector[j] = sectors_per_block >> 8*j;
 
 		for(j = j; j < sizeof(unsigned int) * 2; j++)
-			second_sector[j] = (start[i]+2) >> 8*(j-4);
+			second_sector[j] = (start[i]+2) >> 8*(j-sizeof(unsigned int));//start[i]+2 é onde o raiz está salvo...
 
 		for(j = j; j < sizeof(unsigned int) * 3; j++)
-			second_sector[j] = end[i] >> 8*(j-8); //rever isso do j, por enquanto deixa assim...
+			second_sector[j] = end[i] >> 8*(j-sizeof(unsigned int)*2);
 
 		write_sector(start[i]+1, second_sector);
 
 		free(first_sector);
 		free(second_sector);
+
+		//root allocation
+			//hash for root directories allocation
+		//basicamente pra root pego o bloco (bitmap e tudo) e faço o mkdir primal e pego
+		//e faço a estrutura hash dele e gg? root pronto? só poder receber um open que já era?
+		//salvo zeros nas entradas e deu?
 	}
-	//fazer estrutura do superbloco
-	//nele vou armazenar onde tá o bitmap, o bitmap, tamanho dos blocos,
-	//onde começa de fato (start, onde tá raiz), onde termina.
+	//testar pra ver se os dados tão sendo salvos de maneira correta, se vou conseguir ler depois
+	//nas posições que eu acho q está pra abstrair as infos e tals...
+	//basicamente fazer a função de boot
+	//mas primeiro, tenho que fazer uma função de hash e fazer o diretório raiz!
+	//mas antes do raiz, tenho que definir o tamanho das estradas e terminar de salvar as coisas
+	//do superbloco!
 
-	//salvo dados no disco em high endian, caguei
-
-	//isso vai ficar dentro de um loop maior de super bloco, na real
-	//onde vou armazenar no disco os bitmaps? e onde fica a informação de onde achar eles?
-	//e um bitmap não ocupa todo um setor, como lidar com isso?
-
-
-	//root allocation
-		//hash for root directories allocation
-
-	//loop do bitmap, aloca quantidade de blocos pra partição, grava no disco
-	//da free
-	//unsigned int bitmap[];
 
 	//debugging:
 	printf("version: %x\n", version);

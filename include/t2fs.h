@@ -23,6 +23,26 @@ typedef struct {
     DWORD   indexBlock;                  //ver se pode mudar isso, não tinha nada...
 } DIRENT2;
 
+
+typedef struct element
+{
+    char name[7];
+
+}element;
+
+typedef struct{
+
+    element* entries[32];
+
+} HashTable;
+
+typedef struct{
+
+	char name[7];
+
+} HashTable2;
+
+
 #pragma pack(pop)
 
 

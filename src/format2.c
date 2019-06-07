@@ -8,6 +8,7 @@
 #include "../include/apidisk.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SecMBR 0
 
@@ -21,12 +22,6 @@ int format2(int sectors_per_block)
 
 	if(read_sector(SecMBR, mbr) != 0)
 		return -1;
-	if(sectors_per_block < 2)
-	{
-		//PERGUNTAR PRO CARISSIMI ISSO, SE NÃO TEM QUE REVER O SUPERBLOCO!
-		printf("this file system only works with blocks with more than one sector!\n");
-		return -2;
-	}
 
 	/*
      *the information is stored in little endian fashion in the disk, because of this
@@ -41,7 +36,7 @@ int format2(int sectors_per_block)
 	version = (mbr[1] << 8 | mbr[0]);
 	sector_bytes = (mbr[3] << 8 | mbr[2]);
 	if(sector_bytes != SECTOR_SIZE)
-		return -3;
+		return -2;
 	partition_table = (mbr[5] << 8 | mbr[4]);
 	partition_count = (mbr[7] << 8 | mbr[6]);
 
@@ -65,7 +60,8 @@ int format2(int sectors_per_block)
 			      mbr[i_byte_adrs]);
 		i_byte_adrs += 4;
 
-		partition_size[i] = end[i] - start[i] + 1;
+		partition_size[i] = end[i] - start[i] -1;//we use 2 fixed sectors for the superblock, the rest is then treated as 
+		printf("%d\n", partition_size[i]);       //blocks
 		partition_size[i] /= sectors_per_block;
 		printf("start: %d\n", start[i]);
 		printf("end: %d\n", end[i]);
@@ -90,12 +86,13 @@ int format2(int sectors_per_block)
         *the first 4 bytes are used to store the sectors per block information
         *the next 4 bytes are used to store the start sector of the partition (root dir) 
         *the next 4 bytes are used to store the last sector of the partition
-        *armazenar entrada do dir raiz aqui!
+        *armazenar entrada do dir raiz aqui! (bloco 1 ué)
         *armazenar tamanho de um hash
-        *armazenar quantos setores livres tem ainda?, não...
+        *armazenar divisoes de um dir e tals, quanto ocupa e informações e o q é o q
 	*/
 	//boot lê o superbloco e armazena em globais as infos
-	//em um diretório vão caber 16 arquivos. Cada entrada vai ter 
+	//em um diretório vão caber 16 ou mais arquivos(tamanho bloco/32), depende da hash tambéḿ já que ela ocupa espaço. 
+	//Cada entrada vai ter 
 	//32 bytes -> posição do índice vai ser 4 bytes; 1 tipo; 4 tamanho; nome 22(23) bytes
 	//tamanho da entrada é verificável ao dar sizeof na struct...  Acessar dados é só acessar dados de struct...
 	//SÓ SE NÃO PODE MUDAR, DAÍ EU VOU PRECISAR DO TAMANHO, PRA SABER ONDE FICAR OS
@@ -106,7 +103,7 @@ int format2(int sectors_per_block)
 	for(i = 0; i < partition_count; i++)
 	{
 		bitmap_start = 8;
-		bitmap_end = (partition_size[i]/8) + bitmap_start;
+		bitmap_end = (partition_size[i]/8) + bitmap_start;//511/8 = 63 e alguns quebrados... esses alguns quebrados são desconsiderados...
 		BYTE *first_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);
 		BYTE *second_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);	
 		for(j = 0; j < sizeof(BYTE) * SECTOR_SIZE; j++)
@@ -124,9 +121,9 @@ int format2(int sectors_per_block)
 		for(j = (int) bitmap_start; j < (int) bitmap_end; j++)	
 		{
 			if(j == bitmap_start)
-				first_sector[j] = 3; //sets the first  2 bits of the bitmap to 1 (byte 1 is 0000 0011 = 3...), since
-			                         //the first block is used for the superblock itself and the second for the root dir.
-									 //1 byte (8 numbers in b) to hexa is 2. 0000 0011 becomes 02
+				first_sector[j] = 1; //sets the first bit of the bitmap to 1 (byte 1 is 0000 0001 = 1...), since
+			                         //the first block is used for the root itselt. The superblock space is not treated as a block
+									 //1 byte (8 numbers in b) to hexa is 2. 0000 0001 becomes 01
 			else
 				first_sector[j] = 0; //to actually visualize the bitmap area, set this to 1, this confirms the
 			                         //theory that the bitmap is correctly mapped to the number of blocks.
@@ -151,6 +148,28 @@ int format2(int sectors_per_block)
 		free(first_sector);
 		free(second_sector);
 
+		HashTable ht;
+
+		printf("aa %d\n", sizeof(element));
+		for(j = 0; j < 32; j++)
+		{
+
+        	ht.entries[j] = malloc(sizeof(element));
+        	strcpy(ht.entries[j]->name, "1234567890");
+            printf("Size: %d\n", sizeof(ht.entries[j]));
+            printf("bb %d\n", sizeof(ht.entries[j]->name));
+    	}
+
+    	//mesma logica do hash, calcula indice pelo nome e coloca nele...
+    	//nao faz por ponteiros..
+    	HashTable2 htt[32];
+   		for(j = 0; j < 32; j++)
+		{
+        	strcpy(htt[j].name, "1");
+            printf("Size2: %d\n", sizeof(htt));
+            printf("bb2 %d\n", sizeof(htt[j].name));
+    	}	
+
 		//root allocation
 			//hash for root directories allocation
 		//basicamente pra root pego o bloco (bitmap e tudo) e faço o mkdir primal e pego
@@ -168,10 +187,10 @@ int format2(int sectors_per_block)
 	//debugging:
 	printf("version: %x\n", version);
 	printf("number of partitions: %d\n", partition_count);
-	printf("partition 1 with name %s size in blocks: %d\n", partition_names[0], partition_size[0]);
-	printf("partition 2 with name %s size in blocks: %d\n", partition_names[1], partition_size[1]);
-	printf("partition 3 with name %s size in blocks: %d\n", partition_names[2], partition_size[2]);
-	printf("partition 4 with name %s size in blocks: %d\n", partition_names[3], partition_size[3]);
+	printf("partition 1 with name %s size in blocks: %d\n", partition_names[0], (partition_size[0]/8)*8);
+	printf("partition 2 with name %s size in blocks: %d\n", partition_names[1], (partition_size[1]/8)*8);
+	printf("partition 3 with name %s size in blocks: %d\n", partition_names[2], (partition_size[2]/8)*8);
+	printf("partition 4 with name %s size in blocks: %d\n", partition_names[3], (partition_size[3]/8)*8);
 
     return 0;
 }

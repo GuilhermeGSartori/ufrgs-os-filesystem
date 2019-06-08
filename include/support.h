@@ -1,59 +1,3 @@
-#define M 20000//tamanho da hash...
-
-//List structure for the resolution of conflicts in the HashTable
-//Cada entrada vai estar atrelada a um hash, se tiver conflito, é inserido na de baixo...
-//percorre hash até chegar no valor calculado, se não achou, arquivo não existe
-typedef struct element
-{
-    char entry name[7];
-
-}element;
-
-//ponteiro para M elementos...
-
-//Se Hash pegar as 5 primeiras letras do nome... e só der a posição, tipo, a única informação salva na hash
-//são os 5 bytes iniciais do nome, daí se acha um que dá match, pega a entrada de posição i (índice iterando até M)
-//e vê se o nome é de fato o mesmo, se não for, volta e continua procurando... (se o \0 veio antes do ultimo não...)
-//vou ter que achar o equilibrio de espaço pra hash e entradas...
-//13 pra M e 13 entradas... sobra espaço mas né...
-
-//tá, na real, vamos fazer por setor! entradas num setor e hash dessas entradas
-//2 setores o bloco?
-//duplica ambos, simples...
-
-//em 256, com 32 pra cada entrada
-//no mundo sem hash, dá 8 entradas
-//7 entradas
-//256 - 64
-//192 da 6 entradas, beleza
-//com 64 que hash a gente faz?
-//10 caracteres x 6(quantas entradas vai ter)
-//da 60... top
-//
-//512 -> 12 entradas 
-//512 - 12*32 = 128
-//128 pra gaurdar a hash
-//12*10 da 120... 8 bytes pro buraco...
-//quando ficar 32 bytes no buraco, consigo fazer +1 entrada, daí
-//basicamente isso, vou de 6 em 6 entradas e a hash vai acompanhando
-//desperdício vai crescendo de 4 em 4....
-//tudo isso que foi definido é salvo no setor 2 lá no format, e resgatado no boot...
-
-//na real esquece tudo isso...
-//vai ter mto mais entradas...
-//não vai ser só 2...
-//32 bytes uma entrada
-//256/32 -> 8 entradas por bloco
-//1/16 do de indice pra entradas pra blocos de entradas(bloco e quanto falta, 4 bytes) (2 unsigned short)
-//16/4 = 4
-//dá 4 entradas * 8 = 32 (arquivos)
-//32 entradas... hash vai precisar documentar 32 entradas e tem 240 bytes
-//240/32 = 7 bytes pra arquivo na hash
-//7.5 * 32 = 240
-//e ainda vai sobrar um pouco pra armazinar a quantidade total de arquivos ocupados
-//e assim vai se mantendo, sempre 1/16
-//
-
 //diretório vai ser indexado na real, com hash no bloco de índice, mesma proporção
 //8 (6, 2), só que os 6 vão ser ocupados com entradas de 32 ainda... vai ter uma entrada
 //de 4 bytes pra dizer quantos livres ainda tem também
@@ -64,24 +8,6 @@ typedef struct element
 //bitmap em memória, mas sempre que fizer algo, so fazer um write com ele e gg
 //tipo de arquivo define se é 0 = dir, 1 = txt 2 = bin
 //se bin lê normal mas mete uns print em binário...
-
-//HashTable definition
-typedef struct{
-
-    element* entries[M];
-
-} HashTable;
-
-//inicializar hash
-    {
-        ht.Elementos[l] = malloc(sizeof(element));
-        strcpy(ht.Elementos[l]->key, "NULL");
-        ht.Elementos[l]->Score = 0;
-        ht.Elementos[l]->Ocorrencias = 0;
-        ht.Elementos[l]->Next = NULL;
-    }
-
-
 
 
     int ComputeHash(char s[]) {

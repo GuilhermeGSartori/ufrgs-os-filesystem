@@ -8,7 +8,6 @@
 #include "../include/apidisk.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define SecMBR 0
 
@@ -18,6 +17,7 @@ int format2(int sectors_per_block)
 	unsigned int partition_count = 0, partition_table = 0;
 	unsigned int version = 0, sector_bytes = 0; 
 	unsigned int i_byte_adrs = 0;
+	unsigned int block_size;
 	BYTE *mbr = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);
 
 	if(read_sector(SecMBR, mbr) != 0)
@@ -35,10 +35,14 @@ int format2(int sectors_per_block)
 	//trasformar toda essa porra em uma função de ler dados..
 	version = (mbr[1] << 8 | mbr[0]);
 	sector_bytes = (mbr[3] << 8 | mbr[2]);
+	
 	if(sector_bytes != SECTOR_SIZE)
 		return -2;
+	block_size = sectors_per_block * SECTOR_SIZE;
+
 	partition_table = (mbr[5] << 8 | mbr[4]);
 	partition_count = (mbr[7] << 8 | mbr[6]);
+
 
 	char partition_names[partition_count][24];
 	unsigned int start[partition_count], end[partition_count];
@@ -71,7 +75,7 @@ int format2(int sectors_per_block)
 
 		i_byte_adrs += 24;
 	}
-
+	
 	unsigned int bitmap_start;
 	unsigned int bitmap_end;
 
@@ -99,6 +103,36 @@ int format2(int sectors_per_block)
 	//BYTES DE ÍNDICE
 
 	//format vai criar todos os roots mas te dropa no root da partição 0
+
+	unsigned int entry_p_dir_blck, dir_idx_adrs_bytes, dir_idx_hash_bytes, dir_idx_adrs_number;
+	unsigned int dir_files_max, hash_size, dir_idx_leftovers;
+
+	entry_p_dir_blck = block_size/sizeof(DIRENT2);
+	dir_idx_adrs_bytes = block_size/(16*sectors_per_block);
+	dir_idx_hash_bytes = (block_size*(16*sectors_per_block - 1)) /(16*sectors_per_block);
+	dir_idx_adrs_number = dir_idx_adrs_bytes/(sizeof(WORD) + sizeof(WORD));
+	dir_files_max = dir_idx_adrs_number * entry_p_dir_blck;
+	hash_size = dir_files_max * sizeof(HashTable);
+	dir_idx_leftovers = block_size - hash_size;
+	printf("entry per block of directories: %d\n", entry_p_dir_blck);
+	printf("bytes for entry blocks in the directory index: %d\n", dir_idx_adrs_bytes);
+	printf("bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
+	printf("number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
+	printf("max number of files in a directory: %d\n", dir_files_max);
+	printf("necessary space for the hash table: %d\n", hash_size);
+	printf("remaining bytes of a dir index: %d\n", dir_idx_leftovers);
+	//o que sobra é sempre o numero de arquivos... fazer tipo um bitmap...
+	//1 byte por arquivo...
+	//armazenamos isso no setor 2 também
+
+    //mesma logica do hash, calcula indice pelo nome e coloca nele...
+    //nao faz por ponteiros..
+    HashTable ht[dir_files_max];
+   	
+   	for(i = 0; i < dir_files_max; i++)
+       	ht[j].name[0] = '\0';
+    printf("hash size official: %d\n", sizeof(ht));
+    
 
 	for(i = 0; i < partition_count; i++)
 	{
@@ -143,32 +177,12 @@ int format2(int sectors_per_block)
 		for(j = j; j < sizeof(unsigned int) * 3; j++)
 			second_sector[j] = end[i] >> 8*(j-sizeof(unsigned int)*2);
 
+
 		write_sector(start[i]+1, second_sector);
 
 		free(first_sector);
 		free(second_sector);
 
-		HashTable ht;
-
-		printf("aa %d\n", sizeof(element));
-		for(j = 0; j < 32; j++)
-		{
-
-        	ht.entries[j] = malloc(sizeof(element));
-        	strcpy(ht.entries[j]->name, "1234567890");
-            printf("Size: %d\n", sizeof(ht.entries[j]));
-            printf("bb %d\n", sizeof(ht.entries[j]->name));
-    	}
-
-    	//mesma logica do hash, calcula indice pelo nome e coloca nele...
-    	//nao faz por ponteiros..
-    	HashTable2 htt[32];
-   		for(j = 0; j < 32; j++)
-		{
-        	strcpy(htt[j].name, "1");
-            printf("Size2: %d\n", sizeof(htt));
-            printf("bb2 %d\n", sizeof(htt[j].name));
-    	}	
 
 		//root allocation
 			//hash for root directories allocation

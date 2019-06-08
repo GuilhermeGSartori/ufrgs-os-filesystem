@@ -65,10 +65,9 @@ int format2(int sectors_per_block)
 		i_byte_adrs += 4;
 
 		partition_size[i] = end[i] - start[i] -1;//we use 2 fixed sectors for the superblock, the rest is then treated as 
-		printf("%d\n", partition_size[i]);       //blocks
+                                                 //blocks
 		partition_size[i] /= sectors_per_block;
-		printf("start: %d\n", start[i]);
-		printf("end: %d\n", end[i]);
+
 
 		for(j = 0; j < 24; j++)
 			partition_names[i][j] = mbr[i_byte_adrs+j];
@@ -78,6 +77,7 @@ int format2(int sectors_per_block)
 	
 	unsigned int bitmap_start;
 	unsigned int bitmap_end;
+	unsigned int root_block = 1;
 
 	/*
       *Superblock Structure:
@@ -90,23 +90,30 @@ int format2(int sectors_per_block)
         *the first 4 bytes are used to store the sectors per block information
         *the next 4 bytes are used to store the start sector of the partition (root dir) 
         *the next 4 bytes are used to store the last sector of the partition
-        *armazenar entrada do dir raiz aqui! (bloco 1 ué)
-        *armazenar tamanho de um hash
-        *armazenar divisoes de um dir e tals, quanto ocupa e informações e o q é o q
+        *the next 4 bytes are used to store the block number of the root dir (1)
+        *the next 4 bytes are used to store the number of entries to file index used in a directory block
+        *the next 4 bytes are used to store the number of bytes used to store address to directory blocks in the directory index block
+        *the next 4 bytes are used to store the number of bytes used to store the hash table (the first bytes in the index)
+        *the next 4 bytes are used to store the number of address to directory blocks in the directory index
+        *the next 4 bytes are used to store the max. number of files that can be stored in a single directory;
+        *the next 4 bytes are used to store the actual size of the hashtable
+        *the next 4 bytes are used to store the bytes leftovers in the directory index block
+        *the next 4 bytes are used to store the number of entries in a regular file index block
+        *the next 4 bytes are used to store the max. size in bytes of a regular file;
 	*/
 	//boot lê o superbloco e armazena em globais as infos
 	//em um diretório vão caber 16 ou mais arquivos(tamanho bloco/32), depende da hash tambéḿ já que ela ocupa espaço. 
 	//Cada entrada vai ter 
 	//32 bytes -> posição do índice vai ser 4 bytes; 1 tipo; 4 tamanho; nome 22(23) bytes
 	//tamanho da entrada é verificável ao dar sizeof na struct...  Acessar dados é só acessar dados de struct...
-	//SÓ SE NÃO PODE MUDAR, DAÍ EU VOU PRECISAR DO TAMANHO, PRA SABER ONDE FICAR OS
-	//BYTES DE ÍNDICE
 
 	//format vai criar todos os roots mas te dropa no root da partição 0
 
 	unsigned int entry_p_dir_blck, dir_idx_adrs_bytes, dir_idx_hash_bytes, dir_idx_adrs_number;
 	unsigned int dir_files_max, hash_size, dir_idx_leftovers;
-
+	unsigned int file_idx_entries, file_max_size;
+	
+	//directory definitions
 	entry_p_dir_blck = block_size/sizeof(DIRENT2);
 	dir_idx_adrs_bytes = block_size/(16*sectors_per_block);
 	dir_idx_hash_bytes = (block_size*(16*sectors_per_block - 1)) /(16*sectors_per_block);
@@ -114,13 +121,11 @@ int format2(int sectors_per_block)
 	dir_files_max = dir_idx_adrs_number * entry_p_dir_blck;
 	hash_size = dir_files_max * sizeof(HashTable);
 	dir_idx_leftovers = block_size - hash_size;
-	printf("entry per block of directories: %d\n", entry_p_dir_blck);
-	printf("bytes for entry blocks in the directory index: %d\n", dir_idx_adrs_bytes);
-	printf("bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
-	printf("number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
-	printf("max number of files in a directory: %d\n", dir_files_max);
-	printf("necessary space for the hash table: %d\n", hash_size);
-	printf("remaining bytes of a dir index: %d\n", dir_idx_leftovers);
+
+	//file definitions
+	file_idx_entries = block_size/sizeof(DWORD);
+	file_max_size = file_idx_entries * block_size;
+
 	//o que sobra é sempre o numero de arquivos... fazer tipo um bitmap...
 	//1 byte por arquivo...
 	//armazenamos isso no setor 2 também
@@ -131,7 +136,6 @@ int format2(int sectors_per_block)
    	
    	for(i = 0; i < dir_files_max; i++)
        	ht[j].name[0] = '\0';
-    printf("hash size official: %d\n", sizeof(ht));
     
 
 	for(i = 0; i < partition_count; i++)
@@ -177,6 +181,51 @@ int format2(int sectors_per_block)
 		for(j = j; j < sizeof(unsigned int) * 3; j++)
 			second_sector[j] = end[i] >> 8*(j-sizeof(unsigned int)*2);
 
+		for(j = j; j < sizeof(unsigned int) * 4; j++)
+			second_sector[j] = root_block >> 8*(j-sizeof(unsigned int)*3);
+
+		for(j = j; j < sizeof(unsigned int) * 5; j++)
+			second_sector[j] = entry_p_dir_blck >> 8*(j-sizeof(unsigned int)*4);
+
+		for(j = j; j < sizeof(unsigned int) * 6; j++)
+			second_sector[j] = dir_idx_adrs_bytes >> 8*(j-sizeof(unsigned int)*5);	
+
+		for(j = j; j < sizeof(unsigned int) * 7; j++)
+			second_sector[j] = dir_idx_hash_bytes >> 8*(j-sizeof(unsigned int)*6);	
+
+		for(j = j; j < sizeof(unsigned int) * 8; j++)
+			second_sector[j] = dir_idx_adrs_number >> 8*(j-sizeof(unsigned int)*7);
+
+		for(j = j; j < sizeof(unsigned int) * 9; j++)
+			second_sector[j] = dir_files_max >> 8*(j-sizeof(unsigned int)*8);
+
+		for(j = j; j < sizeof(unsigned int) * 10; j++)
+			second_sector[j] = hash_size >> 8*(j-sizeof(unsigned int)*9);
+
+		for(j = j; j < sizeof(unsigned int) * 11; j++)
+			second_sector[j] = dir_idx_leftovers >> 8*(j-sizeof(unsigned int)*10);
+
+
+		//alem disso tem que verificar se tem blocos suficientes para arquivo crescer...
+		//quando for adicionar dados e etc... 
+		if(file_idx_entries <= partition_size[i])
+		{ 
+			for(j = j; j < sizeof(unsigned int) * 12; j++)
+				second_sector[j] = file_idx_entries >> 8*(j-sizeof(unsigned int)*11);
+
+			for(j = j; j < sizeof(unsigned int) * 13; j++)
+				second_sector[j] = file_max_size >> 8*(j-sizeof(unsigned int)*12);
+		}
+
+		else
+		{
+
+			for(j = j; j < sizeof(unsigned int) * 12; j++)
+				second_sector[j] = (partition_size[i]-1) >> 8*(j-sizeof(unsigned int)*11);
+			for(j = j; j < sizeof(unsigned int) * 13; j++)
+				second_sector[j] = ((partition_size[i]-1)*block_size) >> 8*(j-sizeof(unsigned int)*12);
+		}
+
 
 		write_sector(start[i]+1, second_sector);
 
@@ -186,7 +235,7 @@ int format2(int sectors_per_block)
 
 		//root allocation
 			//hash for root directories allocation
-		//basicamente pra root pego o bloco (bitmap e tudo) e faço o mkdir primal e pego
+		//basicamente pra root pego o bloco (bitmap e tudo) e faço o mkdir literal! e pego
 		//e faço a estrutura hash dele e gg? root pronto? só poder receber um open que já era?
 		//salvo zeros nas entradas e deu?
 	}
@@ -198,6 +247,7 @@ int format2(int sectors_per_block)
 	//do superbloco!
 
 
+	//fazer função format_info que é basicamente isso:
 	//debugging:
 	printf("version: %x\n", version);
 	printf("number of partitions: %d\n", partition_count);
@@ -205,6 +255,28 @@ int format2(int sectors_per_block)
 	printf("partition 2 with name %s size in blocks: %d\n", partition_names[1], (partition_size[1]/8)*8);
 	printf("partition 3 with name %s size in blocks: %d\n", partition_names[2], (partition_size[2]/8)*8);
 	printf("partition 4 with name %s size in blocks: %d\n", partition_names[3], (partition_size[3]/8)*8);
+	printf("entry per block of directories: %d\n", entry_p_dir_blck);
+	printf("bytes for entry blocks in the directory index: %d\n", dir_idx_adrs_bytes);
+	printf("bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
+	printf("number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
+	printf("max number of files in a directory: %d\n", dir_files_max);
+	printf("necessary space for the hash table: %d\n", hash_size);
+	printf("remaining bytes of a dir index: %d\n", dir_idx_leftovers);
+    printf("hash size official: %d\n", sizeof(ht));
+    printf("the number of entries in a reg. file index (also the max number of blocks) in theory: %d\n", file_idx_entries);
+    printf("the max. size in bytes of file in theory: %d\n", file_max_size);
+	printf("start: %d\n", start[0]);
+	printf("end: %d\n", end[0]);    
+	printf("start: %d\n", start[1]);
+	printf("end: %d\n", end[1]);  
+	printf("start: %d\n", start[2]);
+	printf("end: %d\n", end[2]);  
+	printf("start: %d\n", start[3]);
+	printf("end: %d\n", end[3]);  
+	printf("partition size: %d\n", partition_size[0]);   
+	printf("partition size: %d\n", partition_size[1]);   
+	printf("partition size: %d\n", partition_size[2]);   
+	printf("partition size: %d\n", partition_size[3]);   
 
     return 0;
 }

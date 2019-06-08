@@ -15,7 +15,7 @@ typedef unsigned int DWORD;
 #pragma pack(push, 1)
 
 /** Registro com as informações da entrada de diretório, lida com readdir2 */
-#define MAX_FILE_NAME_SIZE 22//ver se pode mudar isso... era 255
+#define MAX_FILE_NAME_SIZE 22
 typedef struct {
     char    name[MAX_FILE_NAME_SIZE+1]; /* Nome do arquivo cuja entrada foi lida do disco                      */
     BYTE    fileType;                   /* Tipo do arquivo: regular (0x01), binario (0x02) ou diretório (0x03) */

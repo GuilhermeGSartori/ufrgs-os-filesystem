@@ -1,7 +1,7 @@
 /**
  * Create a new directory.
  * 
- * @author ?
+ * @author Guilherme Sartori
  */
 #include "../include/constants.h"
 #include "../include/t2fs.h"

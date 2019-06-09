@@ -1,3 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "../include/t2fs.h"
+#include "../include/apidisk.h"
+
+
+//a cada 16 linhas no disco fecha um setor!
+//xxxx são 2 bytes em binário
+        //alem disso tem que verificar se tem blocos suficientes para arquivo crescer...
+        //quando for adicionar dados e etc... 
+
 //diretório vai ser indexado na real, com hash no bloco de índice, mesma proporção
 //8 (6, 2), só que os 6 vão ser ocupados com entradas de 32 ainda... vai ter uma entrada
 //de 4 bytes pra dizer quantos livres ainda tem também
@@ -9,6 +20,15 @@
 //tipo de arquivo define se é 0 = dir, 1 = txt 2 = bin
 //se bin lê normal mas mete uns print em binário...
 
+void four_bytes_to_sector_array(BYTE *sector, unsigned int info, int *iterator, int position);
+
+int mbr_info(BYTE *mbr, unsigned int *version, unsigned int *sector_bytes, unsigned int *partition_table, unsigned int *partition_count);
+
+void global_initialization(unsigned int *information);
+
+void read_little_DWORD(BYTE *source, unsigned int *dest, unsigned int iterator);
+
+void read_big_DWORD(BYTE *source, unsigned int *dest, unsigned int iterator);
 
 int boot2();
 /*

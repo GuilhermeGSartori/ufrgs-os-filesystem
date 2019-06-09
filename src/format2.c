@@ -6,6 +6,7 @@
 //#include "../include/constants.h"
 #include "../include/t2fs.h"
 #include "../include/apidisk.h"
+#include "../include/support.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,6 +33,7 @@ int format2(int sectors_per_block)
 	 *The same logic is applied in information with more than 2 bytes
 	*/
 
+	//o q garante que vão ser 4 partições? ver se considero 4 sempre am algum lugar..
 	//trasformar toda essa porra em uma função de ler dados..
 	version = (mbr[1] << 8 | mbr[0]);
 	sector_bytes = (mbr[3] << 8 | mbr[2]);
@@ -64,7 +66,7 @@ int format2(int sectors_per_block)
 			      mbr[i_byte_adrs]);
 		i_byte_adrs += 4;
 
-		partition_size[i] = end[i] - start[i] -1;//we use 2 fixed sectors for the superblock, the rest is then treated as 
+		partition_size[i] = end[i] - start[i] - 1;//we use 2 fixed sectors for the superblock, the rest is then treated as 
                                                  //blocks
 		partition_size[i] /= sectors_per_block;
 
@@ -173,37 +175,37 @@ int format2(int sectors_per_block)
 		write_sector(start[i], first_sector);
 
 		for(j = 0; j < sizeof(unsigned int); j++)//big endian storing
-			second_sector[j] = sectors_per_block >> 8*j;
+			second_sector[j] = sectors_per_block >> (24-(8*j)) & 0xFF;
 
 		for(j = j; j < sizeof(unsigned int) * 2; j++)
-			second_sector[j] = (start[i]+2) >> 8*(j-sizeof(unsigned int));//start[i]+2 é onde o raiz está salvo...
+			second_sector[j] = (start[i]+2) >> (24-(8*(j-sizeof(unsigned int)))) & 0xFF;//start[i]+2 é onde o raiz está salvo...
 
 		for(j = j; j < sizeof(unsigned int) * 3; j++)
-			second_sector[j] = end[i] >> 8*(j-sizeof(unsigned int)*2);
+			second_sector[j] = end[i] >> (24-(8*(j-sizeof(unsigned int)*2))) & 0xFF;
 
 		for(j = j; j < sizeof(unsigned int) * 4; j++)
-			second_sector[j] = root_block >> 8*(j-sizeof(unsigned int)*3);
+			second_sector[j] = root_block >> (24-(8*(j-sizeof(unsigned int)*3))) & 0xFF;
 
 		for(j = j; j < sizeof(unsigned int) * 5; j++)
-			second_sector[j] = entry_p_dir_blck >> 8*(j-sizeof(unsigned int)*4);
+			second_sector[j] = entry_p_dir_blck >> (24-(8*(j-sizeof(unsigned int)*4))) & 0xFF;
 
 		for(j = j; j < sizeof(unsigned int) * 6; j++)
-			second_sector[j] = dir_idx_adrs_bytes >> 8*(j-sizeof(unsigned int)*5);	
+			second_sector[j] = dir_idx_adrs_bytes >> (24-(8*(j-sizeof(unsigned int)*5))) & 0xFF;	
 
 		for(j = j; j < sizeof(unsigned int) * 7; j++)
-			second_sector[j] = dir_idx_hash_bytes >> 8*(j-sizeof(unsigned int)*6);	
+			second_sector[j] = dir_idx_hash_bytes >> (24-(8*(j-sizeof(unsigned int)*6))) & 0xFF;	
 
 		for(j = j; j < sizeof(unsigned int) * 8; j++)
-			second_sector[j] = dir_idx_adrs_number >> 8*(j-sizeof(unsigned int)*7);
+			second_sector[j] = dir_idx_adrs_number >> (24-(8*(j-sizeof(unsigned int)*7))) & 0xFF;
 
 		for(j = j; j < sizeof(unsigned int) * 9; j++)
-			second_sector[j] = dir_files_max >> 8*(j-sizeof(unsigned int)*8);
+			second_sector[j] = dir_files_max >> (24-(8*(j-sizeof(unsigned int)*8))) & 0xFF;
 
 		for(j = j; j < sizeof(unsigned int) * 10; j++)
-			second_sector[j] = hash_size >> 8*(j-sizeof(unsigned int)*9);
+			second_sector[j] = hash_size >> (24-(8*(j-sizeof(unsigned int)*9))) & 0xFF;
 
 		for(j = j; j < sizeof(unsigned int) * 11; j++)
-			second_sector[j] = dir_idx_leftovers >> 8*(j-sizeof(unsigned int)*10);
+			second_sector[j] = dir_idx_leftovers >> (24-(8*(j-sizeof(unsigned int)*10))) & 0xFF;
 
 
 		//alem disso tem que verificar se tem blocos suficientes para arquivo crescer...
@@ -211,19 +213,19 @@ int format2(int sectors_per_block)
 		if(file_idx_entries <= partition_size[i])
 		{ 
 			for(j = j; j < sizeof(unsigned int) * 12; j++)
-				second_sector[j] = file_idx_entries >> 8*(j-sizeof(unsigned int)*11);
+				second_sector[j] = file_idx_entries >> (24-(8*(j-sizeof(unsigned int)*11))) & 0xFF;
 
 			for(j = j; j < sizeof(unsigned int) * 13; j++)
-				second_sector[j] = file_max_size >> 8*(j-sizeof(unsigned int)*12);
+				second_sector[j] = file_max_size >> (24-(8*(j-sizeof(unsigned int)*12))) & 0xFF;
 		}
 
 		else
 		{
 
 			for(j = j; j < sizeof(unsigned int) * 12; j++)
-				second_sector[j] = (partition_size[i]-1) >> 8*(j-sizeof(unsigned int)*11);
+				second_sector[j] = (partition_size[i]-1) >> (24-(8*(j-sizeof(unsigned int)*11))) & 0xFF;
 			for(j = j; j < sizeof(unsigned int) * 13; j++)
-				second_sector[j] = ((partition_size[i]-1)*block_size) >> 8*(j-sizeof(unsigned int)*12);
+				second_sector[j] = ((partition_size[i]-1)*block_size) >> (24-(8*(j-sizeof(unsigned int)*12))) & 0xFF;
 		}
 
 
@@ -260,11 +262,11 @@ int format2(int sectors_per_block)
 	printf("bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
 	printf("number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
 	printf("max number of files in a directory: %d\n", dir_files_max);
-	printf("necessary space for the hash table: %d\n", hash_size);
+	printf("space used for the hash table: %d\n", hash_size);
 	printf("remaining bytes of a dir index: %d\n", dir_idx_leftovers);
     printf("hash size official: %d\n", sizeof(ht));
     printf("the number of entries in a reg. file index (also the max number of blocks) in theory: %d\n", file_idx_entries);
-    printf("the max. size in bytes of file in theory: %d\n", file_max_size);
+    printf("the max. size in bytes of a file in theory: %d\n", file_max_size);
 	printf("start: %d\n", start[0]);
 	printf("end: %d\n", end[0]);    
 	printf("start: %d\n", start[1]);
@@ -276,14 +278,18 @@ int format2(int sectors_per_block)
 	printf("partition size: %d\n", partition_size[0]);   
 	printf("partition size: %d\n", partition_size[1]);   
 	printf("partition size: %d\n", partition_size[2]);   
-	printf("partition size: %d\n", partition_size[3]);   
+	printf("partition size: %d\n", partition_size[3]);
+	printf("partition 0 bitmap size: %d\n", (partition_size[0]/8));   
+	printf("partition 0 bitmap end: %d\n", (partition_size[0]/8) + bitmap_start);
+
 
     return 0;
 }
 
 int main()
 {
-	format2(2);
+	//format2(2);
+	boot2();
 
 	return 0;
 }

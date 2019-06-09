@@ -10,6 +10,8 @@
 //se bin lê normal mas mete uns print em binário...
 
 
+int boot2();
+/*
     int ComputeHash(char s[]) {
  	int hash=0;
  	int i;
@@ -109,4 +111,4 @@ double searchHash(HashTable* ht, char comentario[])
         }while (Temp->Next != NULL && WordFoundFlag);
     }
     return found;
-}
+}*/

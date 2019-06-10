@@ -15,6 +15,7 @@
 */
 
 _Bool __boot_init = 0;
+_Bool __root_done = 0;//aplica o mkdir pra cada partição depois deixa isso 1...
 int partition = 0;
 unsigned int bitmap_start = 0, bitmap_end = 0;
 unsigned int sectors_per_block = 0, root_sector = 0, partition_end = 0, root_block = 0, entry_p_dir_blck = 0, dir_idx_adrs_bytes = 0;
@@ -107,6 +108,16 @@ int boot2()
     printf("READ -> the real number of entries in a reg. file index  (also the max number of blocks): %d\n", file_idx_entries);
     printf("READ -> the real max. size in bytes of a file: %d\n", file_max_size);
     printf("READ -> the size in bytes of a single block: %d\n", block_size);
+
+	//colocar o brother no root 0, sempre que fizer boot, troca de partição
+	//e isso acontece quando faz cd .. estando no root
+	//ao trocar, incrementa o número da partição e faz o boot
+	//format chama o boot, como global tá em zero, vai colocar em zero...
+	//format só faz os diretórios, boot te coloca no dir
+	//format pra fazer o raiz, mete boot_done = 1, depois de tudo mete = 0
+	//pra não fazer o boot...
+	//boot vem depois
+	//no final da format
 
 	//começar a modular...
 

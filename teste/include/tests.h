@@ -34,19 +34,25 @@ void test_sample_testcases();
  */
 void test_identify2();
 
+/**
+ * Test getcwd2() function.
+ */
+void test_getcwd2();
+
 
 // ======================================================================================
 //                                 ADD YOUR TESTS BELOW!
 // ======================================================================================
 
 // Number of tests in the_tests array.
-unsigned number_of_tests = 3;
+unsigned number_of_tests = 2;
 
 // Array containing all the tests.
 Test the_tests[] = {
-    {"Sample: Single Function", test_sample_single_function},
-    {"Sample: Test Cases", test_sample_testcases},
-    {"Identify2", test_identify2}
+//  {"Sample: Single Function", test_sample_single_function},
+//  {"Sample: Test Cases", test_sample_testcases},
+    {"Identify2", test_identify2},
+    {"Getcwd2", test_getcwd2}
 };
 
 

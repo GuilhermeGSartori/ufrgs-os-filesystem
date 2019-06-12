@@ -15,12 +15,31 @@ typedef unsigned int DWORD;
 #pragma pack(push, 1)
 
 /** Registro com as informações da entrada de diretório, lida com readdir2 */
-#define MAX_FILE_NAME_SIZE 255
+#define MAX_FILE_NAME_SIZE 22
 typedef struct {
-    char    name[MAX_FILE_NAME_SIZE+1]; /* Nome do arquivo cuja entrada foi lida do disco      */
-    BYTE    fileType;                   /* Tipo do arquivo: regular (0x01) ou diretório (0x02) */
-    DWORD   fileSize;                   /* Numero de bytes do arquivo                          */
+    char    name[MAX_FILE_NAME_SIZE+1]; /* Nome do arquivo cuja entrada foi lida do disco                      */
+    BYTE    fileType;                   /* Tipo do arquivo: regular (0x01), binario (0x02) ou diretório (0x03) */
+    DWORD   fileSize;                   /* Numero de bytes do arquivo                                          */
+    WORD    indexBlock;                 /* Endereço do bloco de índice do arquivo                              */
+    WORD    numberOfEntries;            /* Quantidade de entradas utilizadas pelo bloco de índice              */
 } DIRENT2;
+
+typedef struct{
+
+	char name[7];
+
+} HashTable;
+//hash table vai ser assim... vetor de hashtables vai ser declarado
+//com o número de arquivos por diretório...
+//função hash vai calcular o índice a partir do name;
+//primeiros 7 caracteres definem. Se os primeiros 7 forem iguais, vai dar
+//o mesmo cálculo, de boas, salva no próximo índice. Ao achar um arquivo
+//candidato, lê o nome de verdade dele, pra saber se é o real oficial
+//se der a volta e não achar, é pq arquivo não existe. Colocar tudo isso em arquivo
+//de suport.
+//considerar /0 pra evitar ter que ter certeza que é o mesmo.
+//vai saber de cara... só ler a key do hash
+
 
 #pragma pack(pop)
 

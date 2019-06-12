@@ -16,4 +16,5 @@ typedef enum ReturnCode
 } ReturnCode;
 
 
+
 #endif // UFRGS_OS_FILESYSTEM_INCLUDE_CONSTANTS_H

@@ -1,7 +1,7 @@
 /**
  * Identify the developers of T2FS.
  * 
- * @author ?
+ * @author Renan Kummer
  */
 #include "../include/constants.h"
 #include "../include/t2fs.h"

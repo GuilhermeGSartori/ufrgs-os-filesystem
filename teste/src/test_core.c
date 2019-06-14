@@ -56,7 +56,10 @@ int main(int argc, string argv[])
             Test* test = find_test(argv[i]);
 
             if (test != NULL)
+            {
+                printf("Running test '%s'...\n", test->name);
                 test->run();
+            }
             else
                 printf("Test '%s' could not be found.\n", argv[i]);
 
@@ -69,6 +72,7 @@ int main(int argc, string argv[])
         int i;
         for (i = 0; i < number_of_tests; i++)
         {
+            printf("Running test '%s'...\n", the_tests[i].name);
             the_tests[i].run();
             printf("\n");
         }

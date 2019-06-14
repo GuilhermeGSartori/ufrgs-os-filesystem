@@ -19,6 +19,8 @@ int format2(int sectors_per_block)
 	unsigned int version = 0, sector_bytes = 0; 
 	unsigned int i_byte_adrs = 0;
 	unsigned int block_size;
+	extern int partition;
+	extern _Bool __root_done, __boot_init;
 	BYTE *mbr = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);
 
 	if(read_sector(SecMBR, mbr) != 0)
@@ -29,7 +31,7 @@ int format2(int sectors_per_block)
 	
 	block_size = sectors_per_block * SECTOR_SIZE;
 
-	char partition_names[partition_count][24];
+	//char partition_names[partition_count][24];
 	unsigned int start[partition_count], end[partition_count];
 	unsigned int partition_size[partition_count];
 
@@ -46,8 +48,8 @@ int format2(int sectors_per_block)
                                                   //blocks
 		partition_size[i] /= sectors_per_block;
 
-		for(j = 0; j < 24; j++)
-			partition_names[i][j] = mbr[i_byte_adrs+j];
+		//for(j = 0; j < 24; j++)
+		//	partition_names[i][j] = mbr[i_byte_adrs+j];
 
 		i_byte_adrs += 24;
 	}
@@ -111,8 +113,8 @@ int format2(int sectors_per_block)
 		}
 
 		j = 0;
-		four_bytes_to_sector_array(first_sector, bitmap_start, &j, 1);
-		four_bytes_to_sector_array(first_sector, bitmap_end, &j, 2);
+		four_bytes_to_sector_array(first_sector, bitmap_start, &j);
+		four_bytes_to_sector_array(first_sector, bitmap_end, &j);
 
 		for(j = (int) bitmap_start; j < (int) bitmap_end; j++)	
 		{
@@ -120,38 +122,40 @@ int format2(int sectors_per_block)
 				first_sector[j] = (BYTE) 1; //sets the first bit of the bitmap to 1 (byte 1 is 0000 0001 = 1...), since
 			                         //the first block is used for the root itselt. The superblock space is not treated as a block
 									 //1 byte (8 numbers in b) to hexa is 2. 0000 0001 becomes 01
+
+									//colocar igual a 3? já pega o primeiro bloco de entry
 			else
 				first_sector[j] = (BYTE) 0; //to actually visualize the bitmap area, set this to 1, this confirms the
 			                         //theory that the bitmap is correctly mapped to the number of blocks.
 		}
 		
 		j = 0;
-		four_bytes_to_sector_array(second_sector, sectors_per_block, &j, 1);
-		four_bytes_to_sector_array(second_sector, start[i]+2, &j, 2);//start[i]+2 is the root dir first sector
-		four_bytes_to_sector_array(second_sector, end[i], &j, 3);
-		four_bytes_to_sector_array(second_sector, root_block, &j, 4);
-		four_bytes_to_sector_array(second_sector, entry_p_dir_blck, &j, 5);
-		four_bytes_to_sector_array(second_sector, dir_idx_adrs_bytes, &j, 6);
-		four_bytes_to_sector_array(second_sector, dir_idx_hash_bytes, &j, 7);
-		four_bytes_to_sector_array(second_sector, dir_idx_adrs_number, &j, 8);
-		four_bytes_to_sector_array(second_sector, dir_files_max, &j, 9);
-		four_bytes_to_sector_array(second_sector, hash_size, &j, 10);
-		four_bytes_to_sector_array(second_sector, dir_idx_leftovers, &j, 11);
+		four_bytes_to_sector_array(second_sector, sectors_per_block, &j);
+		four_bytes_to_sector_array(second_sector, start[i]+2, &j);//start[i]+2 is the root dir first sector
+		four_bytes_to_sector_array(second_sector, end[i], &j);
+		four_bytes_to_sector_array(second_sector, root_block, &j);
+		four_bytes_to_sector_array(second_sector, entry_p_dir_blck, &j);
+		four_bytes_to_sector_array(second_sector, dir_idx_adrs_bytes, &j);
+		four_bytes_to_sector_array(second_sector, dir_idx_hash_bytes, &j);
+		four_bytes_to_sector_array(second_sector, dir_idx_adrs_number, &j);
+		four_bytes_to_sector_array(second_sector, dir_files_max, &j);
+		four_bytes_to_sector_array(second_sector, hash_size, &j);
+		four_bytes_to_sector_array(second_sector, dir_idx_leftovers, &j);
 
 		if(file_idx_entries <= partition_size[i])
 		{ 
-			four_bytes_to_sector_array(second_sector, file_idx_entries, &j, 12);
-			four_bytes_to_sector_array(second_sector, file_max_size, &j, 13);
+			four_bytes_to_sector_array(second_sector, file_idx_entries, &j);
+			four_bytes_to_sector_array(second_sector, file_max_size, &j);
 		}
 
 		else //if the possible number of entries in a file is greater than the number of blocks in the disk, the entries 
 		{    //number is set to the number of blocks in the disk
 
-			four_bytes_to_sector_array(second_sector, partition_size[i]-1, &j, 12);
-			four_bytes_to_sector_array(second_sector, (partition_size[i]-1)*block_size, &j, 13);
+			four_bytes_to_sector_array(second_sector, partition_size[i]-1, &j);
+			four_bytes_to_sector_array(second_sector, (partition_size[i]-1)*block_size, &j);
 		}
 
-		four_bytes_to_sector_array(second_sector, block_size, &j, 14);
+		four_bytes_to_sector_array(second_sector, block_size, &j);
 		
 		write_sector(start[i], first_sector);//start is the sector number of the first sector of the superblock
 		write_sector(start[i]+1, second_sector);
@@ -159,26 +163,25 @@ int format2(int sectors_per_block)
 		free(first_sector);
 		free(second_sector);
 
+		printf("\n\nStarting mkdir2 for roots, partition %d\n", partition);
+		__root_done = 0;
+		mkdir2("root");
+		printf("root done!\n");
+		__boot_init = 0;
+		partition++;
 
-		//tamanho da entrada é verificável ao dar sizeof na struct...  Acessar dados é só acessar dados de struct...
-
-		//format vai criar todos os roots mas te dropa no root da partição 0
-
-		//root allocation
-			//hash for root directories allocation
-		//basicamente pra root pego o bloco (bitmap e tudo) e faço o mkdir literal! e pego
-		//e faço a estrutura hash dele e gg? root pronto? só poder receber um open que já era?
-		//salvo zeros nas entradas e deu?
 	}
+	__root_done = 1;
+	partition = 0;
+	boot2();
+	//open2(root)
 
-	//mesma logica do hash, calcula indice pelo nome e coloca nele...
-    //nao faz por ponteiros..
-    HashTable ht[dir_files_max];
-   	
+
+
+    //debugging:
+    /*HashTable ht[dir_files_max];
    	for(i = 0; i < dir_files_max; i++)
        	ht[j].name[0] = '\0';
-
-	//debugging:
 	printf("version: %x\n", version);
 	printf("number of partitions: %d\n", partition_count);
 	printf("partition 1 with name %s size in blocks: %d\n", partition_names[0], (partition_size[0]/8)*8);
@@ -210,7 +213,7 @@ int format2(int sectors_per_block)
 	printf("partition size: %d\n", partition_size[3]);
 	printf("partition 0 bitmap size: %d\n", (partition_size[0]/8));   
 	printf("partition 0 bitmap end: %d\n", (partition_size[0]/8) + bitmap_start);
-
+	*/
 
     return 0;
 }

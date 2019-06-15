@@ -9,20 +9,21 @@
 #include "../include/apidisk.h"
 
 /*
- * Global Variables Declaration
+ * Global Variables for Boot Declaration
  * When used, they need to be declares in the files
  * that require them. Using "extern <type> <name>"
+ * put then in the global variables files... or not...
 */
 
-_Bool __boot_init = 0;
-_Bool __root_done = 1;//aplica o mkdir pra cada partição depois deixa isso 1...
-int partition = 0;
-unsigned int bitmap_start = 0, bitmap_end = 0;
-unsigned int sectors_per_block = 0, root_sector = 0, partition_end = 0, root_block = 0, entry_p_dir_blck = 0, dir_idx_adrs_bytes = 0;
-unsigned int dir_idx_hash_bytes = 0, dir_idx_adrs_number = 0, dir_files_max = 0, hash_size = 0, dir_idx_leftovers = 0;
-unsigned int file_idx_entries = 0, file_max_size = 0, block_size = 0;
-unsigned int information[14];
-BYTE *bitmap;
+extern _Bool __boot_init;
+extern _Bool __root_done;
+extern int partition;
+extern unsigned int bitmap_start, bitmap_end;
+extern unsigned int sectors_per_block, root_sector, partition_end, root_block, entry_p_dir_blck, dir_idx_adrs_bytes;
+extern unsigned int dir_idx_hash_bytes, dir_idx_adrs_number, dir_files_max, hash_size, dir_idx_leftovers;
+extern unsigned int file_idx_entries, file_max_size, block_size;
+extern unsigned int information[14];
+extern BYTE *bitmap;
 
 
 #define SecMBR 0
@@ -309,3 +310,10 @@ void dirent_to_bytes_array(BYTE *block, DIRENT2 entry, int *iterator)
 	//printf("\n");
 }
 
+int check_if_root(char *name)
+{
+	if(name[0] == 'r' && name[1] == 'o' && name[2] == 'o' && name[3] == 't' && name[4] == '\0')
+		return 0;
+
+	return -1;
+}

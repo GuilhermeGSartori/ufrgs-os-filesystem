@@ -15,10 +15,13 @@ BIN_DIR=./bin
 SRC_DIR=./src
 
 all:
+	$(CC) -Wall -c $(SRC_DIR)/getcwd2.c -o $(LIB_DIR)/getcwd2.o
+	$(CC) -Wall -c $(SRC_DIR)/chdir2.c -o $(LIB_DIR)/chdir2.o
+	$(CC) -Wall -c $(SRC_DIR)/global_variables.c -o $(LIB_DIR)/global_variables.o
 	$(CC) -Wall -c $(SRC_DIR)/support.c -o $(LIB_DIR)/support.o
 	$(CC) -Wall -c $(SRC_DIR)/mkdir2.c -o $(LIB_DIR)/mkdir2.o
 	$(CC) -Wall -c $(SRC_DIR)/format2.c -o $(LIB_DIR)/format2.o
-	$(CC) -Wall -o ./code_test $(LIB_DIR)/apidisk.o $(LIB_DIR)/format2.o $(LIB_DIR)/support.o $(LIB_DIR)/mkdir2.o
+	$(CC) -Wall -o ./code_test $(LIB_DIR)/apidisk.o $(LIB_DIR)/format2.o $(LIB_DIR)/support.o $(LIB_DIR)/mkdir2.o $(LIB_DIR)/global_variables.o $(LIB_DIR)/chdir2.o $(LIB_DIR)/getcwd2.o
 
 clean:
 	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~

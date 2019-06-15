@@ -9,6 +9,12 @@
 */
 
 /*
+ *Funtion used to verify if the parameter matches with the pattern used for
+ *setting the working directory to the root directory
+ */
+int check_if_root(char *name);
+
+/*
  *Funtion used to save a DIRENT2 structure (or any other structure) in a array of bytes
  *the iterator is the position of the first byte to be modified
  */

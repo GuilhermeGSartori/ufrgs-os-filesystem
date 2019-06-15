@@ -140,6 +140,8 @@ int mkdir2(char *pathname)
 	direc_self.indexBlock = free_blocks[0];
 	direc_self.numberOfEntries = 2;
 
+	//precisa de bloco do pai... tem que ver se é root ou não...
+	//se é root coloca 0, daí sabe quando tem que trocar de partição
 	direc_father.name[0] = '.';
 	direc_father.name[1] = '.';
 	direc_father.name[2] = '\0'; 

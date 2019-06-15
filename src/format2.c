@@ -174,7 +174,7 @@ int format2(int sectors_per_block)
 	__root_done = 1;
 	partition = 0;
 	boot2();
-	//open2(root)
+	chdir2("root\0");
 
 
 
@@ -220,8 +220,17 @@ int format2(int sectors_per_block)
 
 int main()
 {
+	extern WORD working_dir_block;
+	extern _Bool __boot_init, __root_done;
+	char name[5];
+
 	format2(2);
-	boot2();
+	getcwd2(name, 5);
+
+	printf("working dir: %s\n", name);
+	printf("workind dir block: %d\n", working_dir_block);
+	printf("boot init: %d\n", __boot_init);
+	printf("root done: %d\n", __root_done);
 
 	return 0;
 }

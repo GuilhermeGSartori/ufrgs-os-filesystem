@@ -1,12 +1,11 @@
-/** support file:
-// includes: Auxiliar functions
-*/
-
-#include <stdio.h>
-#include <stdlib.h>
+/**
+ * Support functions for T2FS library.
+ * 
+ * @author Guilherme Sartori
+ * @author Marlize Ramos
+ * @author Renan Kummer
+ */
 #include "../include/support.h"
-#include "../include/t2fs.h"
-#include "../include/apidisk.h"
 
 /*
  * Global Variables Declaration
@@ -272,6 +271,9 @@ int ht_to_bytes_array(BYTE *array, HashTable *ht, int *iterator)
 
 int write_block(BYTE *block, WORD block_number)
 {
+	//if (block_number > number_of_blocks || block_number < 0)
+	//	return T2FS_INVALID_BLOCK_NUMBER;
+
 	int free_sector_s;
 	int i, j;
 
@@ -295,7 +297,6 @@ int write_block(BYTE *block, WORD block_number)
 	return 0;
 }
 
-
 void dirent_to_bytes_array(BYTE *block, DIRENT2 entry, int *iterator)
 {
 	BYTE *entry_bytes = (BYTE*) &entry;
@@ -309,3 +310,22 @@ void dirent_to_bytes_array(BYTE *block, DIRENT2 entry, int *iterator)
 	//printf("\n");
 }
 
+ReturnCode read_block(BYTE *block, WORD block_number)
+{
+	if (block == NULL)
+		return T2FS_NULL_POINTER;
+	//if (block_number > number_of_blocks || block_number < 0)
+	//	return T2FS_INVALID_BLOCK_NUMBER;
+
+	int block_initial_sector;
+	if (block_number == root_block)
+		block_initial_sector = root_sector;
+	else
+		block_initial_sector = root_sector + (sectors_per_block * (block_number -1));
+
+	int i;
+	for (i = 0; i < sectors_per_block; i++)
+		read_sector(block_initial_sector + i, block + (i * sectors_per_block));
+
+	return T2FS_SUCCESS;
+}

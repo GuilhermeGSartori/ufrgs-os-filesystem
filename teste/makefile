@@ -16,7 +16,7 @@ t2fs:
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/closedir2.c -o $(BINARY_DIR)/closedir2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/create2.c -o $(BINARY_DIR)/create2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/delete2.c -o $(BINARY_DIR)/delete2.o
-	gcc -Wall -c $(MAIN_SOURCE_DIR)/format2.c -o $(BINARY_DIR)/format2.o
+#	gcc -Wall -c $(MAIN_SOURCE_DIR)/format2.c -o $(BINARY_DIR)/format2.o
 	gcc -Wall -c $(MAIN_SOURCE_DIR)/getcwd2.c -o $(BINARY_DIR)/getcwd2.o
 	gcc -Wall -c $(MAIN_SOURCE_DIR)/identify2.c -o $(BINARY_DIR)/identify2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/ln2.c -o $(BINARY_DIR)/ln2.o

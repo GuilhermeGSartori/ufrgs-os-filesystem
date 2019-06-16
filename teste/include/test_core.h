@@ -13,8 +13,6 @@
 //                                   TYPES & STRUCTURES
 // ======================================================================================
 
-// Alias for c strings.
-typedef char* string;
 // Constants for boolean type.
 typedef enum boolean { FALSE, TRUE } boolean;
 

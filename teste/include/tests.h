@@ -49,7 +49,7 @@ void test_support();
 // ======================================================================================
 
 // Number of tests in the_tests array.
-unsigned number_of_tests = 2;
+unsigned number_of_tests = 3;
 
 // Array containing all the tests.
 Test the_tests[] = {

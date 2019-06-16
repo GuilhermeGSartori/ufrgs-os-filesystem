@@ -29,6 +29,7 @@ t2fs:
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/seek2.c -o $(BINARY_DIR)/seek2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/truncate2.c -o $(BINARY_DIR)/truncate2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/write2.c -o $(BINARY_DIR)/write2.o
+	gcc -Wall -c $(MAIN_SOURCE_DIR)/support.c -o $(BINARY_DIR)/support.o
 	gcc -Wall -c $(MAIN_SOURCE_DIR)/global_variables.c -o $(BINARY_DIR)/global_variables.o
 	ar crs $(LIBRARY_DIR)/libt2fs.a $(LIBRARY_DIR)/apidisk.o $(BINARY_DIR)/*.o
 

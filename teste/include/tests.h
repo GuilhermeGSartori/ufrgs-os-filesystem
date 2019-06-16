@@ -39,6 +39,10 @@ void test_identify2();
  */
 void test_getcwd2();
 
+/**
+ * Test support functions.
+ */
+void test_support();
 
 // ======================================================================================
 //                                 ADD YOUR TESTS BELOW!
@@ -52,7 +56,8 @@ Test the_tests[] = {
 //  {"Sample: Single Function", test_sample_single_function},
 //  {"Sample: Test Cases", test_sample_testcases},
     {"Identify2", test_identify2},
-    {"Getcwd2", test_getcwd2}
+    {"Getcwd2", test_getcwd2},
+    {"Support Functions", test_support}
 };
 
 

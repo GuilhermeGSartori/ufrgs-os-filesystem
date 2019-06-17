@@ -18,5 +18,7 @@ ReturnCode setup_test_virtual_disk()
         fputc(c, copyFile);
 
     fclose(originalFile);
-    fclose(copyFile);    
+    fclose(copyFile);
+
+    return T2FS_SUCCESS;    
 }

@@ -218,6 +218,7 @@ int format2(int sectors_per_block)
     return 0;
 }
 
+/* COMMENTING TO NOT AFFECT OTHER TESTS!
 int main()
 {
 	format2(2);
@@ -225,3 +226,4 @@ int main()
 
 	return 0;
 }
+*/

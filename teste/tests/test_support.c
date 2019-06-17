@@ -6,7 +6,6 @@
 #include "../include/test_core.h"
 #include "../../include/constants.h"
 #include "../../include/support.h"
-#include "../include/test_setup.h"
 #include "../../include/t2fs.h"
 #include <string.h>
 
@@ -90,17 +89,9 @@ boolean test_ReadBlock_ValidCall()
 void test_support()
 {
     // Set up test cases.
-    if (setup_test_virtual_disk() == T2FS_FAILURE)
-    {
-        printf("Failed to setup test cases!\n");
-        return;
-    } else
-    {
-        format2(2);
-        boot2();
-
-        setup_test_block();
-    }
+    format2(2);
+    boot2();
+    setup_test_block();
 
     // Run all test cases.
     run_test_case("ReadBlock_NullBuffer", test_ReadBlock_NullBuffer);

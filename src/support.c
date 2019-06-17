@@ -325,7 +325,7 @@ ReturnCode read_block(BYTE *block, WORD block_number)
 
 	int i;
 	for (i = 0; i < sectors_per_block; i++)
-		read_sector(block_initial_sector + i, block + (i * sectors_per_block));
+		read_sector(block_initial_sector + i, block + (i * SECTOR_SIZE));
 
 	return T2FS_SUCCESS;
 }

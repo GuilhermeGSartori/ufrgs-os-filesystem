@@ -20,7 +20,7 @@ t2fs:
 	gcc -Wall -c $(MAIN_SOURCE_DIR)/getcwd2.c -o $(BINARY_DIR)/getcwd2.o
 	gcc -Wall -c $(MAIN_SOURCE_DIR)/identify2.c -o $(BINARY_DIR)/identify2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/ln2.c -o $(BINARY_DIR)/ln2.o
-#	gcc -Wall -c $(MAIN_SOURCE_DIR)/mkdir2.c -o $(BINARY_DIR)/mkdir2.o
+	gcc -Wall -c $(MAIN_SOURCE_DIR)/mkdir2.c -o $(BINARY_DIR)/mkdir2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/open2.c -o $(BINARY_DIR)/open2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/opendir2.c -o $(BINARY_DIR)/opendir2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/read2.c -o $(BINARY_DIR)/read2.o

@@ -365,7 +365,7 @@ string* parse_path(string path, int *array_size)
 	}
 
 	// Break path into array of entries.
-	string* path_entries = (string) malloc(sizeof(string) * (*array_size));
+	string* path_entries = (string*) malloc(sizeof(string) * (*array_size));
 	string entry;
 
 	i = 0;

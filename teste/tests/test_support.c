@@ -150,6 +150,25 @@ boolean test_ParsePath_ValidCalls()
     return TRUE;
 }
 
+boolean test_GetEntryName_NullParameter()
+{
+    if (get_entry_name(NULL) == NULL)
+        return TRUE;
+
+    return FALSE;
+}
+
+boolean test_GetEntryName_ValidCall()
+{
+    char test_path[] = {'.','/','a','l','o','/','t','r','e','t','a','\0'};
+    string entry_name = get_entry_name(test_path);
+    
+    if (strcmp(entry_name, "treta") == 0)
+        return TRUE;
+
+    return FALSE;
+}
+
 // ================================================================================================
 //                                             THE TEST
 // ================================================================================================
@@ -166,4 +185,6 @@ void test_support()
     run_test_case("ReadBlock_ValidCall", test_ReadBlock_ValidCall);
     run_test_case("ParsePath_NullParameters", test_ParsePath_NullParameters);
     run_test_case("ParsePath_ValidCalls", test_ParsePath_ValidCalls);
+    run_test_case("GetEntryName_NullParameter", test_GetEntryName_NullParameter);
+    run_test_case("GetEntryName_ValidCall", test_GetEntryName_ValidCall);
 }

@@ -69,8 +69,8 @@ int boot2()
 	i_byte_adrs += 4;
 	read_big_DWORD(bitmap_sector, &bitmap_end, i_byte_adrs);
 
-	printf("READ -> Bitmap start: %d\n", bitmap_start);
-	printf("READ -> Bitmap end: %d\n", bitmap_end);
+	//printf("READ -> Bitmap start: %d\n", bitmap_start);
+	//printf("READ -> Bitmap end: %d\n", bitmap_end);
 
 	bitmap = (BYTE *) malloc(sizeof(BYTE )*(bitmap_end - bitmap_start));
 
@@ -94,20 +94,20 @@ int boot2()
 
 	global_initialization(information);
 
-	printf("READ -> sectors per block: %d\n", sectors_per_block);
-	printf("READ -> root sector: %d\n", root_sector);
-	printf("READ -> partition end: %d\n", partition_end);
-	printf("READ -> root block: %d\n", root_block);
-	printf("READ -> entry per block of directories: %d\n", entry_p_dir_blck);
-	printf("READ -> bytes for entry blocks in the directory index: %d\n", dir_idx_adrs_bytes);
-	printf("READ -> bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
-	printf("READ -> number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
-	printf("READ -> max number of files in a directory: %d\n", dir_files_max);
-	printf("READ -> space used for the hash table: %d\n", hash_size);
-	printf("READ -> remaining bytes of a dir index: %d\n", dir_idx_leftovers);
-    printf("READ -> the real number of entries in a reg. file index  (also the max number of blocks): %d\n", file_idx_entries);
-    printf("READ -> the real max. size in bytes of a file: %d\n", file_max_size);
-    printf("READ -> the size in bytes of a single block: %d\n", block_size);
+	//printf("READ -> sectors per block: %d\n", sectors_per_block);
+	//printf("READ -> root sector: %d\n", root_sector);
+	//printf("READ -> partition end: %d\n", partition_end);
+	//printf("READ -> root block: %d\n", root_block);
+	//printf("READ -> entry per block of directories: %d\n", entry_p_dir_blck);
+	//printf("READ -> bytes for entry blocks in the directory index: %d\n", dir_idx_adrs_bytes);
+	//printf("READ -> bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
+	//printf("READ -> number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
+	//printf("READ -> max number of files in a directory: %d\n", dir_files_max);
+	//printf("READ -> space used for the hash table: %d\n", hash_size);
+	//printf("READ -> remaining bytes of a dir index: %d\n", dir_idx_leftovers);
+    //printf("READ -> the real number of entries in a reg. file index  (also the max number of blocks): %d\n", file_idx_entries);
+    //printf("READ -> the real max. size in bytes of a file: %d\n", file_max_size);
+    //printf("READ -> the size in bytes of a single block: %d\n", block_size);
 
 	//colocar o brother no root 0, sempre que fizer boot, troca de partição
 	//e isso acontece quando faz cd .. estando no root
@@ -335,6 +335,8 @@ string* parse_path(string path, int *array_size)
 {
 	if (array_size == NULL || path == NULL)
 		return NULL;
+	if (path[0] == '\0')
+		return NULL;
 
 	// Copy original path since strtok() alters the parameter.
 	string path_copy = (string) malloc((sizeof(char) * strlen(path)) + 3);
@@ -382,4 +384,15 @@ string* parse_path(string path, int *array_size)
 	}
 
 	return path_entries;
+}
+
+string get_entry_name(string path)
+{
+	int number_of_entries;
+	string *path_entries = parse_path(path, &number_of_entries);
+
+	if (number_of_entries == 0 || path_entries == NULL)
+		return NULL;
+	else
+		return path_entries[number_of_entries - 1];
 }

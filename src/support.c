@@ -6,6 +6,7 @@
  * @author Renan Kummer
  */
 #include "../include/support.h"
+#include <string.h>
 
 /*
  * Global Variables Declaration
@@ -328,4 +329,57 @@ ReturnCode read_block(BYTE *block, WORD block_number)
 		read_sector(block_initial_sector + i, block + (i * SECTOR_SIZE));
 
 	return T2FS_SUCCESS;
+}
+
+string* parse_path(string path, int *array_size)
+{
+	if (array_size == NULL || path == NULL)
+		return NULL;
+
+	// Copy original path since strtok() alters the parameter.
+	string path_copy = (string) malloc((sizeof(char) * strlen(path)) + 3);
+	
+	if (path[0] == '/')
+	{
+		path_copy[0] = '.';
+		path_copy[1] = '\0';
+	} else if (path[0] != '.')
+	{
+		path_copy[0] = '.';
+		path_copy[1] = '/';
+		path_copy[2] = '\0';	
+	} else
+	{
+		path_copy[0] = '\0';
+	}
+
+	strcat(path_copy, path);
+
+	// Count number of entries in path.
+	int i;
+	*array_size = 1;
+	for (i = 0; i < strlen(path_copy); i++)
+	{
+		if (path_copy[i] == '/' && i != (strlen(path_copy)-1))
+			*array_size += 1;
+	}
+
+	// Break path into array of entries.
+	string* path_entries = (string) malloc(sizeof(string) * (*array_size));
+	string entry;
+
+	i = 0;
+	path_copy = strtok(path_copy, "/");
+	while (path_copy != NULL)
+	{
+		entry = (string) malloc(sizeof(char) * strlen(path_copy) + 1);
+		strcpy(entry, path_copy);
+
+		path_entries[i] = entry;
+
+		i++;
+		path_copy = strtok(NULL, "/");
+	}
+
+	return path_entries;
 }

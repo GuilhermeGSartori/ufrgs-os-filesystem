@@ -105,11 +105,11 @@ int calculate_hash_table_index(string entry_name);
  *   [2] = "b"
  *   [3] = "c.txt"
  * 
- * @param path      The path to parse.
- * @param arraySize The size of returning array.
+ * @param path       The path to parse.
+ * @param array_size The size of returning array.
  * @return Array of strings with each entry.
  */
-string* parse_path(string path, int *arraySize);
+string* parse_path(string path, int *array_size);
 
 /**
  * Get entry name from path.

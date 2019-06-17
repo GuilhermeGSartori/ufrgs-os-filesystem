@@ -81,6 +81,74 @@ boolean test_ReadBlock_ValidCall()
         return FALSE;
 }
 
+boolean test_ParsePath_NullParameters()
+{
+    char test_path[] = {'.','/','a','l','o','/','t','r','e','t','a','\0'};
+    int test_size;
+
+    if (parse_path(NULL, &test_size) != NULL)
+        return FALSE;
+    if (parse_path(test_path, NULL) != NULL)
+        return FALSE;
+
+    return TRUE;
+}
+
+boolean test_ParsePath_ValidCalls()
+{
+    int test_size;
+    char test_path1[] = {'.','/','a','l','o','/','t','r','e','t','a','\0'};
+    char test_path2[] = {'.','\0'};
+    char test_path3[] = {'/','\0'};
+    char test_path4[] = {'.','.','\0'};
+    char test_path5[] = {'a','l','o','\0'};
+
+    string *path_entries = parse_path(test_path1, &test_size);
+    if (test_size != 3)
+        return FALSE;
+    if (path_entries == NULL)
+        return FALSE;
+    if (strcmp(path_entries[0],".") != 0   || 
+        strcmp(path_entries[1],"alo") != 0 ||
+        strcmp(path_entries[2],"treta") != 0)
+    {
+        return FALSE;
+    }
+
+    path_entries = parse_path(test_path2, &test_size);
+    if (test_size != 1)
+        return FALSE;
+    if (path_entries == NULL)
+        return FALSE;
+    if (strcmp(path_entries[0],".") != 0)
+        return FALSE;
+
+    path_entries = parse_path(test_path3, &test_size);
+    if (test_size != 1)
+        return FALSE;
+    if (path_entries == NULL)
+        return FALSE;
+    if (strcmp(path_entries[0],".") != 0)
+        return FALSE;
+
+    path_entries = parse_path(test_path4, &test_size);
+    if (test_size != 1)
+        return FALSE;
+    if (path_entries == NULL)
+        return FALSE;
+    if (strcmp(path_entries[0],"..") != 0)
+        return FALSE;
+
+    path_entries = parse_path(test_path5, &test_size);
+    if (test_size != 2)
+        return FALSE;
+    if (path_entries == NULL)
+        return FALSE;
+    if (strcmp(path_entries[0],".") != 0 || strcmp(path_entries[1],"alo") != 0)
+        return FALSE;
+
+    return TRUE;
+}
 
 // ================================================================================================
 //                                             THE TEST
@@ -96,4 +164,6 @@ void test_support()
     // Run all test cases.
     run_test_case("ReadBlock_NullBuffer", test_ReadBlock_NullBuffer);
     run_test_case("ReadBlock_ValidCall", test_ReadBlock_ValidCall);
+    run_test_case("ParsePath_NullParameters", test_ParsePath_NullParameters);
+    run_test_case("ParsePath_ValidCalls", test_ParsePath_ValidCalls);
 }

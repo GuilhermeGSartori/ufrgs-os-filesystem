@@ -217,11 +217,3 @@ int format2(int sectors_per_block)
 
     return 0;
 }
-
-int main()
-{
-	format2(2);
-	boot2();
-
-	return 0;
-}

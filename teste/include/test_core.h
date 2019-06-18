@@ -5,6 +5,7 @@
  * 
  * @author Renan Kummer
  */
+#include "../../include/support.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,8 +14,6 @@
 //                                   TYPES & STRUCTURES
 // ======================================================================================
 
-// Alias for c strings.
-typedef char* string;
 // Constants for boolean type.
 typedef enum boolean { FALSE, TRUE } boolean;
 

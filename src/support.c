@@ -1,12 +1,12 @@
-/** support file:
-// includes: Auxiliar functions
-*/
-
-#include <stdio.h>
-#include <stdlib.h>
+/**
+ * Support functions for T2FS library.
+ * 
+ * @author Guilherme Sartori
+ * @author Marlize Ramos
+ * @author Renan Kummer
+ */
 #include "../include/support.h"
-#include "../include/t2fs.h"
-#include "../include/apidisk.h"
+#include <string.h>
 
 /*
  * Global Variables for Boot Declaration
@@ -18,11 +18,11 @@
 extern _Bool __boot_init;
 extern _Bool __root_done;
 extern int partition;
-extern unsigned int bitmap_start, bitmap_end;
+extern unsigned int bitmap_start, bitmap_end, superblock_start, number_of_blocks;
 extern unsigned int sectors_per_block, root_sector, partition_end, root_block, entry_p_dir_blck, dir_idx_adrs_bytes;
 extern unsigned int dir_idx_hash_bytes, dir_idx_adrs_number, dir_files_max, hash_size, dir_idx_leftovers;
 extern unsigned int file_idx_entries, file_max_size, block_size;
-extern unsigned int information[14];
+extern unsigned int information[16];
 extern BYTE *bitmap;
 
 
@@ -70,8 +70,8 @@ int boot2()
 	i_byte_adrs += 4;
 	read_big_DWORD(bitmap_sector, &bitmap_end, i_byte_adrs);
 
-	printf("READ -> Bitmap start: %d\n", bitmap_start);
-	printf("READ -> Bitmap end: %d\n", bitmap_end);
+	//printf("READ -> Bitmap start: %d\n", bitmap_start);
+	//printf("READ -> Bitmap end: %d\n", bitmap_end);
 
 	bitmap = (BYTE *) malloc(sizeof(BYTE )*(bitmap_end - bitmap_start));
 
@@ -87,7 +87,7 @@ int boot2()
 	}
 
 	i_byte_adrs = 0;
-	for(i = 0; i < 14; i++)
+	for(i = 0; i < 16; i++)
 	{
 		read_big_DWORD(info_sector, &information[i], i_byte_adrs);
 		i_byte_adrs += 4;
@@ -95,20 +95,22 @@ int boot2()
 
 	global_initialization(information);
 
-	printf("READ -> sectors per block: %d\n", sectors_per_block);
-	printf("READ -> root sector: %d\n", root_sector);
-	printf("READ -> partition end: %d\n", partition_end);
-	printf("READ -> root block: %d\n", root_block);
-	printf("READ -> entry per block of directories: %d\n", entry_p_dir_blck);
-	printf("READ -> bytes for entry blocks in the directory index: %d\n", dir_idx_adrs_bytes);
-	printf("READ -> bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
-	printf("READ -> number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
-	printf("READ -> max number of files in a directory: %d\n", dir_files_max);
-	printf("READ -> space used for the hash table: %d\n", hash_size);
-	printf("READ -> remaining bytes of a dir index: %d\n", dir_idx_leftovers);
-    printf("READ -> the real number of entries in a reg. file index  (also the max number of blocks): %d\n", file_idx_entries);
-    printf("READ -> the real max. size in bytes of a file: %d\n", file_max_size);
-    printf("READ -> the size in bytes of a single block: %d\n", block_size);
+	//printf("READ -> sectors per block: %d\n", sectors_per_block);
+	//printf("READ -> root sector: %d\n", root_sector);
+	//printf("READ -> partition end: %d\n", partition_end);
+	//printf("READ -> root block: %d\n", root_block);
+	//printf("READ -> entry per block of directories: %d\n", entry_p_dir_blck);
+	//printf("READ -> bytes for entry blocks in the directory index: %d\n", dir_idx_adrs_bytes);
+	//printf("READ -> bytes for the hash table in the directory index: %d\n", dir_idx_hash_bytes);
+	//printf("READ -> number of entries for the DIRENT2 blocks in the index: %d\n", dir_idx_adrs_number);
+	//printf("READ -> max number of files in a directory: %d\n", dir_files_max);
+	//printf("READ -> space used for the hash table: %d\n", hash_size);
+	//printf("READ -> remaining bytes of a dir index: %d\n", dir_idx_leftovers);
+    //printf("READ -> the real number of entries in a reg. file index  (also the max number of blocks): %d\n", file_idx_entries);
+    //printf("READ -> the real max. size in bytes of a file: %d\n", file_max_size);
+    //printf("READ -> the size in bytes of a single block: %d\n", block_size);
+    printf("READ -> superblock start: %d\n", superblock_start);
+    printf("READ -> number_of_blocks: %d\n", number_of_blocks);
 
 	//colocar o brother no root 0, sempre que fizer boot, troca de partição
 	//e isso acontece quando faz cd .. estando no root
@@ -199,6 +201,8 @@ void global_initialization(unsigned int *information)
 	file_idx_entries = information[11];
 	file_max_size = information[12];
 	block_size = information[13];
+	superblock_start = information[14];
+	number_of_blocks = information[15];
 }
 
 //a proxima função é essa só que refatorada, tá mto mais lógica e fácil de entender agora
@@ -273,6 +277,9 @@ int ht_to_bytes_array(BYTE *array, HashTable *ht, int *iterator)
 
 int write_block(BYTE *block, WORD block_number)
 {
+	//if (block_number > number_of_blocks || block_number < 0)
+	//	return T2FS_INVALID_BLOCK_NUMBER;
+
 	int free_sector_s;
 	int i, j;
 
@@ -296,7 +303,6 @@ int write_block(BYTE *block, WORD block_number)
 	return 0;
 }
 
-
 void dirent_to_bytes_array(BYTE *block, DIRENT2 entry, int *iterator)
 {
 	BYTE *entry_bytes = (BYTE*) &entry;
@@ -310,6 +316,7 @@ void dirent_to_bytes_array(BYTE *block, DIRENT2 entry, int *iterator)
 	//printf("\n");
 }
 
+
 int check_if_root(char *name)
 {
 	if(name[0] == 'r' && name[1] == 'o' && name[2] == 'o' && name[3] == 't' && name[4] == '\0')
@@ -317,3 +324,146 @@ int check_if_root(char *name)
 
 	return -1;
 }
+
+ReturnCode read_block(BYTE *block, WORD block_number)
+{
+	if (block == NULL)
+		return T2FS_NULL_POINTER;
+	//if (block_number > number_of_blocks || block_number < 0)
+	//	return T2FS_INVALID_BLOCK_NUMBER;
+
+	int block_initial_sector;
+	if (block_number == root_block)
+		block_initial_sector = root_sector;
+	else
+		block_initial_sector = root_sector + (sectors_per_block * (block_number -1));
+
+	int i;
+	for (i = 0; i < sectors_per_block; i++)
+		read_sector(block_initial_sector + i, block + (i * SECTOR_SIZE));
+
+	return T2FS_SUCCESS;
+}
+
+string* parse_path(string path, int *array_size)
+{
+	if (array_size == NULL || path == NULL)
+		return NULL;
+	if (path[0] == '\0')
+		return NULL;
+
+	// Copy original path since strtok() alters the parameter.
+	string path_copy = (string) malloc((sizeof(char) * strlen(path)) + 3);
+	
+	if (path[0] == '/')
+	{
+		path_copy[0] = '.';
+		path_copy[1] = '\0';
+	} else if (path[0] != '.')
+	{
+		path_copy[0] = '.';
+		path_copy[1] = '/';
+		path_copy[2] = '\0';	
+	} else
+	{
+		path_copy[0] = '\0';
+	}
+
+	strcat(path_copy, path);
+
+	// Count number of entries in path.
+	int i;
+	*array_size = 1;
+	for (i = 0; i < strlen(path_copy); i++)
+	{
+		if (path_copy[i] == '/' && i != (strlen(path_copy)-1))
+			*array_size += 1;
+	}
+
+	// Break path into array of entries.
+	string* path_entries = (string*) malloc(sizeof(string) * (*array_size));
+	string entry;
+
+	i = 0;
+	path_copy = strtok(path_copy, "/");
+	while (path_copy != NULL)
+	{
+		entry = (string) malloc(sizeof(char) * strlen(path_copy) + 1);
+		strcpy(entry, path_copy);
+
+		path_entries[i] = entry;
+
+		i++;
+		path_copy = strtok(NULL, "/");
+	}
+
+	return path_entries;
+}
+
+string get_entry_name(string path)
+{
+	int number_of_entries;
+	string *path_entries = parse_path(path, &number_of_entries);
+
+	if (number_of_entries == 0 || path_entries == NULL)
+		return NULL;
+	else
+		return path_entries[number_of_entries - 1];
+}
+
+
+
+int free_block_bit()
+{
+	int i, j;
+	extern BYTE *bitmap;
+	extern unsigned int bitmap_end, bitmap_start;
+	int block_range_s;
+	BYTE *bitmap_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);
+
+	i = 0;
+
+	while(bitmap[i] == 255 && i < (bitmap_end - bitmap_start))
+			i++;
+
+	if(i == (bitmap_end - bitmap_start))
+	{
+		printf("DISK IS FULL!\n");
+		return -1;
+	}
+
+	block_range_s = (i*8)+1;
+
+	j = 0;
+	while((bitmap[i] & (1 << j)) != 0)
+		j++;
+
+	bitmap[i] |= 1 << j;
+
+	printf("byte %d and bit %d.\n", i, j);
+
+
+	for(j = 0; j < sizeof(BYTE) * SECTOR_SIZE; j++)
+		bitmap_sector[j] = 0;
+
+	j = 0;
+	four_bytes_to_sector_array(bitmap_sector, bitmap_start, &j);
+	four_bytes_to_sector_array(bitmap_sector, bitmap_end, &j);
+
+	i = 0;
+	for(j = (int) bitmap_start; j < (int) bitmap_end; j++)
+	{
+		bitmap_sector[j] = bitmap[i];
+		i++;
+	}
+
+	write_sector(superblock_start, bitmap_sector);//start is the sector number of the first sector of the superblock
+
+	return block_range_s + j;
+}
+		//falta escrever o bitmap...
+		//fazer função "write_bitmap"
+		//format limpa bitmap...
+
+		//gravar bitmap em setor
+		//fazer função de pegar bitmap

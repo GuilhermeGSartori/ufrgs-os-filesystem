@@ -59,7 +59,7 @@ int format2(int sectors_per_block)
 	unsigned int root_block = 1;
 	unsigned int entry_p_dir_blck, dir_idx_adrs_bytes, dir_idx_hash_bytes, dir_idx_adrs_number;
 	unsigned int dir_files_max, hash_size, dir_idx_leftovers;
-	unsigned int file_idx_entries, file_max_size;
+	unsigned int file_idx_entries, file_max_size, number_of_blocks;
 	
 	/*directory definitions*/
 	entry_p_dir_blck = block_size/sizeof(DIRENT2);//the number of file entries that a dir. block can have
@@ -97,12 +97,16 @@ int format2(int sectors_per_block)
         *the next 4 bytes are used to store the number of entries in a regular file index block
         *the next 4 bytes are used to store the max. size in bytes of a regular file;
         *the next 4 bytes are used to store the block size in bytes
+        *the next 4 bytes are used to store the first superblock sector
+        *the next 4 bytes are used to store the official size in block of the partition
 	*/
 
 	for(i = 0; i < partition_count; i++)
 	{
+		number_of_blocks = (partition_size[i]/8)*8;//since the blocks needs to be a multiple of 8 (for the bitmap)
+		                                           //some blocks can be not used
 		bitmap_start = 8;
-		bitmap_end = (partition_size[i]/8) + bitmap_start;//511/8 = 63 e alguns quebrados... esses alguns quebrados são desconsiderados...
+		bitmap_end = (partition_size[i]/8) + bitmap_start;
 		BYTE *first_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);
 		BYTE *second_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);	
 
@@ -142,6 +146,7 @@ int format2(int sectors_per_block)
 		four_bytes_to_sector_array(second_sector, hash_size, &j);
 		four_bytes_to_sector_array(second_sector, dir_idx_leftovers, &j);
 
+
 		if(file_idx_entries <= partition_size[i])
 		{ 
 			four_bytes_to_sector_array(second_sector, file_idx_entries, &j);
@@ -156,6 +161,8 @@ int format2(int sectors_per_block)
 		}
 
 		four_bytes_to_sector_array(second_sector, block_size, &j);
+		four_bytes_to_sector_array(second_sector, start[i], &j);//the first sector of the superblock
+		four_bytes_to_sector_array(second_sector, number_of_blocks, &j);
 		
 		write_sector(start[i], first_sector);//start is the sector number of the first sector of the superblock
 		write_sector(start[i]+1, second_sector);
@@ -193,9 +200,9 @@ int format2(int sectors_per_block)
     //debugging:
     /*HashTable ht[dir_files_max];
    	for(i = 0; i < dir_files_max; i++)
-       	ht[j].name[0] = '\0';
+     	ht[j].name[0] = '\0';
 	printf("version: %x\n", version);
-	printf("number of partitions: %d\n", partition_count);
+ 	printf("number of partitions: %d\n", partition_count);
 	printf("partition 1 with name %s size in blocks: %d\n", partition_names[0], (partition_size[0]/8)*8);
 	printf("partition 2 with name %s size in blocks: %d\n", partition_names[1], (partition_size[1]/8)*8);
 	printf("partition 3 with name %s size in blocks: %d\n", partition_names[2], (partition_size[2]/8)*8);
@@ -243,6 +250,9 @@ int main()
 	printf("workind dir block: %d\n", working_dir_block);
 	printf("boot init: %d\n", __boot_init);
 	printf("root done: %d\n", __root_done);
+
+	printf("\n\n\n");
+	mkdir2("./newdir");
 
 	return 0;
 }

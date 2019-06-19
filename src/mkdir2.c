@@ -8,21 +8,23 @@
 #include "../include/support.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int mkdir2(char *pathname)
 {
 	int i, j, k;
 	extern _Bool __boot_init; 
 	extern _Bool __root_done;
-	extern BYTE *bitmap;
-	extern unsigned int root_block, bitmap_end, bitmap_start;
+	extern unsigned int root_block;
 	extern unsigned int dir_idx_adrs_bytes;
 	extern unsigned int block_size, dir_files_max;
+	extern char working_dir_path[10000];
+	extern WORD working_dir_block;
 	WORD entries_used = 2;
-	DIRENT2 direc_self; 
-	DIRENT2 direc_father;//, direc_entry;
-	int block_range_s;
+	DIRENT2 direc_self, direc_father; 
+	DIRENT2 direc_entry;
 	WORD free_blocks[2];
+	int path_size;
 
 
 	if(__boot_init == 0)
@@ -36,32 +38,15 @@ int mkdir2(char *pathname)
 	{
 		for(k = 0; k < 2; k++)
 		{
-			i = 0;
-			
-			while(bitmap[i] == 255 && i < (bitmap_end - bitmap_start))
-				i++;
-
-			if(i == (bitmap_end - bitmap_start))
-			{
-				printf("DISK IS FULL!\n");
-				return -1;
-			}
+			free_blocks[k] = free_block_bit();
+			if(free_blocks[k] == -1)
+				return -3;
+		
 			//caso especial se estou na root
 			//ver isso '/' é o dir atual
 			//faz root de pai daí
 			//ou não precisa...
 			//só vê o dir pai, universal pra tudo inclusive root
-
-			block_range_s = (i*8)+1;
-
-			j = 0;
-			while((bitmap[i] & (1 << j)) != 0)
-				j++;
-
-			free_blocks[k] = block_range_s + j;
-			//write_block(BYTE *block, WORD block_number)
-
-			bitmap[i] |= 1 << j;
 		}
 
 		//criação do diretório que estou criando agora, para s*er inserido no pai dele
@@ -70,7 +55,26 @@ int mkdir2(char *pathname)
 		//e o nome. 
 		//faz hash com o nome informado e coloca no pai
 		//root não tem isso, pois não é uma entrada, já que não tem pai
-		/*direc_entry.name[0] = '\0';//parametro
+
+		string *path = parse_path(pathname, &path_size);
+		if(path[path_size-2][0] == '.')
+		{
+			direc_father.indexBlock = working_dir_block;//ver do pai
+			printf("bloco do pai: %d\n", direc_father.indexBlock);
+			//salva direto onde tá com working_dir
+			//string *working_path = parse_path(working_dir_path, &path_size);
+			//strcpy(direc_entry.name, working_path[path_size-1]);
+			//vamos começar assim
+			//salvando localmente, só no primeiro nível
+			//tenho que pegar o bloco, ler o bloco, salvar a entrada na hash e deu
+
+		}
+		//else
+			//strcpy(direc_entry.name, path[path_size-2]);
+
+		strcpy(direc_entry.name, path[path_size-1]);
+		//direc_entry salvo no pai!
+		printf("nome do novo dir: %s\n", direc_entry.name);
 		direc_entry.fileType = 3;
 		//directory.fileSize
 		direc_entry.indexBlock = free_blocks[0];
@@ -78,46 +82,21 @@ int mkdir2(char *pathname)
 		//salva no pai (pelo caminho, com o nome indicado)
 		//como é relativo, salva no pai que tá
 		//nome também depende se é 
-		direc_father.indexBlock = 0;//ver do pai
-		direc_father.numberOfEntries = 0;//ver do pai*/
+		direc_father.numberOfEntries = 0;//ver do pai
+										 //tem que ver pq ao atualizar tem que salvar na dele também
 
 	}
 	else
 	{
 		printf("ROOT NOT DONE!\n");
 		free_blocks[0] = root_block;
-
-		i = 0;
-			
-		while(bitmap[i] == 255 && i < (bitmap_end - bitmap_start))
-			i++;
-
-		if(i == (bitmap_end - bitmap_start))
-		{
-			printf("DISK IS FULL!\n");
-			return -1;
-		}
-
-		block_range_s = (i*8)+1;
-
-		j = 0;
-		while((bitmap[i] & (1 << j)) != 0)
-			j++;
-
-		free_blocks[1] = block_range_s + j;
-
-		bitmap[i] |= 1 << j;
-		//falta escrever o bitmap...
-		//fazer função "write_bitmap"
-		//format limpa bitmap...
-
-		//gravar bitmap em setor
-		//fazer função de pegar bitmap
+		free_blocks[1] = free_block_bit();
+		if(free_blocks[1] == -1)
+			return -3;
 
 		direc_father.indexBlock = 0;
 		direc_father.numberOfEntries = 0;
 
-		printf("byte %d and bit %d.\n", i, j);
 		printf("block number: %d\n", free_blocks[1]);
 	}
 

@@ -46,6 +46,11 @@ int mkdir2(char *pathname)
 				printf("DISK IS FULL!\n");
 				return -1;
 			}
+			//caso especial se estou na root
+			//ver isso '/' é o dir atual
+			//faz root de pai daí
+			//ou não precisa...
+			//só vê o dir pai, universal pra tudo inclusive root
 
 			block_range_s = (i*8)+1;
 
@@ -105,6 +110,12 @@ int mkdir2(char *pathname)
 		//falta escrever o bitmap...
 		//fazer função "write_bitmap"
 		//format limpa bitmap...
+
+		//gravar bitmap em setor
+		//fazer função de pegar bitmap
+
+		direc_father.indexBlock = 0;
+		direc_father.numberOfEntries = 0;
 
 		printf("byte %d and bit %d.\n", i, j);
 		printf("block number: %d\n", free_blocks[1]);

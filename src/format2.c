@@ -167,6 +167,18 @@ int format2(int sectors_per_block)
 		__root_done = 0;
 		mkdir2("root");
 		printf("root done!\n");
+		//só falta testar pra ver se as infos no disco pós-mkdir estão certas...
+		//e isso se faz com open e read...
+		//também preciso escrever bitmap em setor e modular isso
+		//beleza
+		//fazer open e read dir
+		//depois create file
+		//open e write file
+		//e um read file
+		//e deu pra mim
+		//melhorar chdir2 também
+		//mas proximos passos definitivamente são open e read dir pra ver
+		//se tudo certo nos diretórios root
 		__boot_init = 0;
 		partition++;
 

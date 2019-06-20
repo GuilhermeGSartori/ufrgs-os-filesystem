@@ -11,7 +11,7 @@ TEST_CASES_DIR   =./tests
 all: t2fs test
 
 t2fs:
-#	gcc -Wall -c $(MAIN_SOURCE_DIR)/chdir2.c -o $(BINARY_DIR)/chdir2.o
+	gcc -Wall -c $(MAIN_SOURCE_DIR)/chdir2.c -o $(BINARY_DIR)/chdir2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/close2.c -o $(BINARY_DIR)/close2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/closedir2.c -o $(BINARY_DIR)/closedir2.o
 #	gcc -Wall -c $(MAIN_SOURCE_DIR)/create2.c -o $(BINARY_DIR)/create2.o

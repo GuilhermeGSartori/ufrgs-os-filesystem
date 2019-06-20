@@ -16,15 +16,14 @@ int mkdir2(char *pathname)
 	extern _Bool __boot_init; 
 	extern _Bool __root_done;
 	extern unsigned int root_block;
-	extern unsigned int dir_idx_adrs_bytes;
+	extern unsigned int dir_idx_adrs_bytes, entry_p_dir_blck;
 	extern unsigned int block_size, dir_files_max;
-	extern char working_dir_path[10000];
-	extern WORD working_dir_block;
+	extern WORD working_dir_block, temp_dir_block;
 	WORD entries_used = 2;
 	DIRENT2 direc_self, direc_father; 
 	DIRENT2 direc_entry;
-	WORD free_blocks[2];
-	int path_size;
+	WORD free_blocks[2], index_entry, extra_block;
+	int path_size, entry_number;
 
 
 	if(__boot_init == 0)
@@ -32,6 +31,8 @@ int mkdir2(char *pathname)
 
 	BYTE *index_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
 	BYTE *entries_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	BYTE *father_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	BYTE *dir_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
 	HashTable ht[dir_files_max];
 
 	if(__root_done == 1)
@@ -42,11 +43,7 @@ int mkdir2(char *pathname)
 			if(free_blocks[k] == -1)
 				return -3;
 		
-			//caso especial se estou na root
-			//ver isso '/' é o dir atual
-			//faz root de pai daí
-			//ou não precisa...
-			//só vê o dir pai, universal pra tudo inclusive root
+			printf("free block %d\n", free_blocks[k]);
 		}
 
 		//criação do diretório que estou criando agora, para s*er inserido no pai dele
@@ -60,30 +57,94 @@ int mkdir2(char *pathname)
 		if(path[path_size-2][0] == '.')
 		{
 			direc_father.indexBlock = working_dir_block;//ver do pai
-			printf("bloco do pai: %d\n", direc_father.indexBlock);
-			//salva direto onde tá com working_dir
-			//string *working_path = parse_path(working_dir_path, &path_size);
-			//strcpy(direc_entry.name, working_path[path_size-1]);
-			//vamos começar assim
-			//salvando localmente, só no primeiro nível
-			//tenho que pegar o bloco, ler o bloco, salvar a entrada na hash e deu
+		}
+		else
+		{
+			temp_dir_block = working_dir_block;
+			for(i = 1; i < path_size-1; i++)
+			{
+				printf("movendo para %s\n", path[i]);
+				if(find_target_dir(path[i]) != 0)
+				{
+					printf("path invalido '%s' nao existe!\n", path[i]);
+					return -1;
+				}
+			}
+
+			direc_father.indexBlock = temp_dir_block;
 
 		}
-		//else
-			//strcpy(direc_entry.name, path[path_size-2]);
+
+		printf("father block: %d\n", direc_father.indexBlock);
+		read_block(father_block, direc_father.indexBlock);
+		read_block(dir_block, father_block[0] << 8 | father_block[1]);
+		j = 0;
+		read_entry(dir_block, &direc_father, &j);
+		direc_father.numberOfEntries++;
+		j = 0;
+		dirent_to_bytes_array(dir_block, direc_father, &j);
+		write_block(dir_block, father_block[0] << 8 | father_block[1]);
+
 
 		strcpy(direc_entry.name, path[path_size-1]);
-		//direc_entry salvo no pai!
-		printf("nome do novo dir: %s\n", direc_entry.name);
 		direc_entry.fileType = 3;
-		//directory.fileSize
 		direc_entry.indexBlock = free_blocks[0];
 		direc_entry.numberOfEntries = 2;
+		entry_number = get_entry_number(direc_entry.name, direc_father.numberOfEntries); 
+		index_entry = father_block[(entry_number/entry_p_dir_blck) * 4] << 8 | father_block[((entry_number/entry_p_dir_blck) * 4)+1];
+		
+		if(index_entry == 65535)//unsigned word -1
+		{
+			extra_block = free_block_bit();
+			j = (entry_number/entry_p_dir_blck) * 4;
+			printf("extra allocated block: %d, byte position: %d \n", extra_block, j);//33?
+			two_bytes_to_bytes_array(father_block, extra_block, &j);
+			two_bytes_to_bytes_array(father_block, 1, &j);
+			write_block(father_block, direc_father.indexBlock);
+			
+			read_block(dir_block, extra_block);
+			j = 0;
+			dirent_to_bytes_array(dir_block, direc_entry, &j);
+			for(i = sizeof(DIRENT2); i < block_size; i++) {
+				//printf("%d\n", i);
+				dir_block[i] = (BYTE) 0;
+			}
+
+			write_block(dir_block, extra_block);
+		}
+
+		else
+		{
+			read_block(dir_block, index_entry);
+			j = sizeof(DIRENT2) * (entry_number - entry_p_dir_blck*(entry_number/entry_p_dir_blck));
+			dirent_to_bytes_array(dir_block, direc_entry, &j);
+			write_block(dir_block, index_entry);
+		}
+
+
+
+		//a moral é que eu pego a entry number e divido por o numero de entries que cabem no dir block
+		//o valor que dá (arredonda) é em qual dir block vai ficar
+		//vejo se no índice essa entrada é -1
+		//se for, aloco novo bloco usando a bitmap e faço todo o esquema
+		//daí tenho que atualizar a word seguinte
+		//salvo a entrada na posição certa baseado no entry_number
+		//gravo ambos os blocos
+		//e deu!
 		//salva no pai (pelo caminho, com o nome indicado)
 		//como é relativo, salva no pai que tá
 		//nome também depende se é 
-		direc_father.numberOfEntries = 0;//ver do pai
-										 //tem que ver pq ao atualizar tem que salvar na dele também
+
+
+
+
+		//salva direto onde tá com working_dir
+		//string *working_path = parse_path(working_dir_path, &path_size);
+		//strcpy(direc_entry.name, working_path[path_size-1]);
+		//vamos começar assim
+		//salvando localmente, só no primeiro nível
+		//tenho que pegar o bloco, ler o bloco, salvar a entrada na hash e deu
+
 
 	}
 	else
@@ -96,8 +157,6 @@ int mkdir2(char *pathname)
 
 		direc_father.indexBlock = 0;
 		direc_father.numberOfEntries = 0;
-
-		printf("block number: %d\n", free_blocks[1]);
 	}
 
 
@@ -106,7 +165,21 @@ int mkdir2(char *pathname)
 	}
 
 	for(j = 0; j < dir_files_max; j++) {
-		ht[j].name[0] = '\0';
+		if(j == 0)
+		{
+			ht[j].name[0] = '\0';
+			ht[j].block = free_blocks[0];
+		}
+		else if(j == 1)
+		{
+			ht[j].name[0] = '\0';
+			ht[j].block = direc_father.indexBlock;
+		}
+		else
+		{
+			ht[j].name[0] = '\0';
+			ht[j].block = 0;
+		}
 	}
 
 	j = 0;
@@ -130,8 +203,6 @@ int mkdir2(char *pathname)
 	direc_self.indexBlock = free_blocks[0];
 	direc_self.numberOfEntries = 2;
 
-	//precisa de bloco do pai... tem que ver se é root ou não...
-	//se é root coloca 0, daí sabe quando tem que trocar de partição
 	direc_father.name[0] = '.';
 	direc_father.name[1] = '.';
 	direc_father.name[2] = '\0'; 
@@ -152,10 +223,9 @@ int mkdir2(char *pathname)
 
 	write_block(entries_block, free_blocks[1]);
 
-	//não vai ser problema para arquivos regulares, pois pra saber
-	//que byte utilizar, basta olhar o quanto o arquivo ocupa
-
-	//criamos entradas 
+	BYTE *test_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	read_block(test_block, working_dir_block);
+	list_entries(test_block);
 
     return 0;
 }

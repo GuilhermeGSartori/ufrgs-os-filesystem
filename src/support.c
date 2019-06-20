@@ -24,7 +24,7 @@ extern unsigned int dir_idx_hash_bytes, dir_idx_adrs_number, dir_files_max, hash
 extern unsigned int file_idx_entries, file_max_size, block_size;
 extern unsigned int information[16];
 extern BYTE *bitmap;
-
+WORD working_dir_block;
 
 #define SecMBR 0
 
@@ -441,6 +441,81 @@ int free_block_bit()
 	return block_range_s + j;
 }
 
+ReturnCode new_entry(string entry_name, int *index_to_entry_block)
+{
+	if (entry_name == NULL || index_to_entry_block == NULL)
+		return T2FS_NULL_POINTER;
+
+	BYTE *current_block = (BYTE*) malloc(sizeof(BYTE) * block_size);
+	ReturnCode status = read_block(current_block, working_dir_block);
+	
+	if (status != T2FS_SUCCESS)
+	{
+		free(current_block);	
+		return status;
+	} else
+	{
+		unsigned int table_start = dir_idx_adrs_bytes;
+		WORD *dir_index_blocks = (WORD*) current_block;
+
+		int i;
+		for (i = 0; i < table_start; i += 2)
+		{
+			if (dir_index_blocks[i] == (WORD) -1 || dir_index_blocks[i+1] < (WORD) entry_p_dir_blck)
+			{
+				*index_to_entry_block = i;
+				return T2FS_SUCCESS;
+			}
+		}
+
+		return T2FS_DIRECTORY_IS_FULL;
+	}
+}
+
+ReturnCode find_entry(string entry_name, WORD *entry_block)
+{
+	if (entry_name == NULL || entry_block == NULL)
+		return T2FS_NULL_POINTER;
+
+	BYTE *current_block = (BYTE*) malloc(sizeof(BYTE) * block_size);
+	ReturnCode status = read_block(current_block, working_dir_block);
+	
+	if (status != T2FS_SUCCESS)
+	{
+		free(current_block);	
+		return status;
+	} else
+	{
+		unsigned int table_start = dir_idx_adrs_bytes;
+		WORD *dir_index_blocks = (WORD*) current_block;
+
+		int i;
+		int j;
+		for (i = 0; i < table_start; i += 2)
+		{
+			if (dir_index_blocks[i] == (WORD) -1 || dir_index_blocks[i+1] > 0)
+			{
+				BYTE *this_entry_block_as_byte = (BYTE*) malloc(sizeof(BYTE) * block_size);
+				status = read_block(this_entry_block_as_byte, dir_index_blocks[i]);
+
+				DIRENT2 *this_entry_block_as_dirent = (DIRENT2*) this_entry_block_as_byte;
+				for (j = 0; j < entry_p_dir_blck; j++)
+				{
+					int dirent_first_byte = j * sizeof(DIRENT2);
+					if (this_entry_block_as_byte[dirent_first_byte] != (WORD) -1 && 
+						this_entry_block_as_dirent[j].indexBlock > 0x00 &&
+						strcmp(this_entry_block_as_dirent[j].name, entry_name) == 0)
+					{
+						*entry_block = dir_index_blocks[i];
+						return T2FS_SUCCESS;
+					}
+				}
+			}
+		}
+
+		return T2FS_FAILURE;
+	}
+}
 
 void list_entries(BYTE *block)//basicamente readdir
 {

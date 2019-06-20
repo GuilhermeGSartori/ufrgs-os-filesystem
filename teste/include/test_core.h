@@ -15,7 +15,7 @@
 // ======================================================================================
 
 // Constants for boolean type.
-typedef enum boolean { FALSE, TRUE } boolean;
+typedef enum boolean { test_FALSE, test_TRUE } boolean;
 
 
 // Definition of Test structure.

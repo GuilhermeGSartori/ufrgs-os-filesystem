@@ -150,6 +150,47 @@ string* parse_path(string path, int *array_size);
  */
 string get_entry_name(string path);
 
+/**
+ * Tests if file handle is valid (handle < 0 || handle >= MAX_OPEN_FILES).
+ * 
+ * 
+ * @param handle The handle of the file.
+ * @return Boolean.
+ */
+BOOL isFileHandleValid(FILE2 handle);
+
+/**
+ * Tests if directory handle is valid (handle < 0 || handle >= MAX_OPEN_FILES).
+ * 
+ * 
+ * @param handle The handle of the directory.
+ * @return Boolean.
+ */
+BOOL isDirHandleValid(DIR2 handle);
+
+/**
+ * Initializes the array of strucutures for open files.
+ */
+void initializeOpenFiles();
+
+/**
+ * Initializes the array of strucutures for open directories.
+ */
+void initializeOpenDirs();
+
+/**
+ * Searches for free file handle.
+ * 
+ * @return File handle (if available) or error (no free handle).
+ */
+FILE2 getFreeFileHandle();
+
+/**
+ * Searches for free directory handle.
+ * 
+ * @return Directory handle (if available) or error (no free handle).
+ */
+DIR2 getFreeDirHandle();
 
 /*************************************************************************************************
  * RASCUNHO

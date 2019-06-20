@@ -233,6 +233,7 @@ int format2(int sectors_per_block)
     return 0;
 }
 
+/*
 int main()
 {
 	extern WORD working_dir_block;
@@ -289,3 +290,4 @@ int main()
 
 	return 0;
 }
+*/

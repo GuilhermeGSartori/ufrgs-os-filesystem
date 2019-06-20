@@ -71,7 +71,8 @@ void setup_directory_block()
         entry_block[i] = *the_entry;
     
     BYTE* entry_block_as_byte = (BYTE*) entry_block;
-    write_block(entry_block_as_byte, (WORD) ENTRY_BLOCK_NUM);    
+    write_block(current_directory, working_dir_block);
+    write_block(entry_block_as_byte, (WORD) 150);    
 }
 
 

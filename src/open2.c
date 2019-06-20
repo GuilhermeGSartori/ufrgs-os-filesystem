@@ -5,8 +5,27 @@
  */
 #include "../include/constants.h"
 #include "../include/t2fs.h"
+#include "../include/support.h"
 
 FILE2 open2(char* filename)
 {
-    return T2FS_FAILURE;
+    if(__boot_init == 0)
+		boot2();
+
+    FILE2 freeHandle = getFreeFileHandle(); 
+	if(freeHandle == T2FS_FAILURE) 
+		return T2FS_NO_FREE_HANDLE;  // quantidade máxima permitida de arquivos abertos (10) foi alcançada
+
+	DIRENT2 record;
+	if(getRecordFromPath(filename, &record) != 0){
+		return T2FS_FAILURE;
+	}
+
+	if(record.fileType == REGULAR || record.fileType == BINARIO){
+		openFiles[freeHandle].record = record;
+		openFiles[freeHandle].currentPointer = 0;
+		return freeHandle;
+	}
+	return T2FS_FAILURE;    
+
 }

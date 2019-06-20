@@ -18,6 +18,10 @@
 // Alias for C strings.
 typedef char* string;
 
+typedef struct t2fs_openfile{
+	DIRENT2 record;
+	DWORD currentPointer; // Em bytes a partir do inicio do arquivo!
+} OpenFile;
 
 // ======================================================================================
 //                                       FUNCTIONS
@@ -121,6 +125,12 @@ string* parse_path(string path, int *array_size);
  * @return The entry name.
  */
 string get_entry_name(string path);
+
+BOOL isFileHandleValid(FILE2 handle);
+
+void initializeOpenFiles();
+
+FILE2 getFreeFileHandle();
 
 
 /*************************************************************************************************

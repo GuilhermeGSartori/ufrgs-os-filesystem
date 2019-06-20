@@ -396,3 +396,27 @@ string get_entry_name(string path)
 	else
 		return path_entries[number_of_entries - 1];
 }
+
+BOOL isFileHandleValid(FILE2 handle){
+	if(handle < 0 || handle >= MAX_OPEN_FILES || (openFiles[handle].record.fileType != REGULAR && openFiles[handle].record.fileType != BINARIO))
+		return FALSE;
+	else
+		return TRUE;
+}
+
+void initializeOpenFiles(){
+	int i;
+	for(i = 0; i < MAX_OPEN_FILES; i++){
+		openFiles[i].record.fileType = INVALIDO;		//ainda não foi alocado, então FyleType = 0 (1-> regular, 2-> binário, 3-> diretório)
+	}
+}
+
+//busca handle livre para o arquivo
+FILE2 getFreeFileHandle(){
+	FILE2 freeHandle;
+	for(freeHandle = 0; freeHandle < MAX_OPEN_FILES; freeHandle++){
+		if(openFiles[freeHandle].record.fileType == INVALIDO)
+			return freeHandle;
+	}
+	return T2FS_FAILURE;
+}

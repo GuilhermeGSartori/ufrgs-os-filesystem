@@ -238,7 +238,7 @@ boolean test_FindEntry_ValidCall()
         return FALSE;
     }
 
-    if (index_block_number != ENTRY_BLOCK_NUM)
+    if (index_block_number != (WORD) 150)
     {
         printf("Wrong block number: %d\n", index_block_number);
         return FALSE;

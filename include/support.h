@@ -100,12 +100,33 @@ void read_big_DWORD(BYTE *source, unsigned int *dest, unsigned int iterator);
 int boot2();
 
 /**
- * Calculates the index of an entry in current working directory's hash table. 
+ * Calculates the index to block number of entry block (DIRENTs block) for a NEW entry.
  * 
- * @param entry_name The name of the entry.
- * @return The index for the entry if hash table has space, T2FS_DIRECTORY_IS_FULL otherwise.
+ * Example:
+ *   Given a index block (WORD*)
+ *     [0] = BLOCK_NUM  [1] = FULL_NUM;
+ *     [2] = -1         [3] = -1
+ *   When calling new_entry("a", index_to_entry_block)
+ *   Then
+ *     index_to_entry_block = 2 and function returns T2FS_SUCCESS.
+ * 
+ * @param entry_name           The name of the entry.
+ * @param index_to_entry_block Entry block with available space (output).
+ * @return T2FS_SUCCESS if successful, T2FS_DIRECTORY_IS_FULL otherwise.
  */
-int calculate_hash_table_index(string entry_name);
+ReturnCode new_entry(string entry_name, int *index_to_entry_block);
+
+/**
+ * Calculates the block number of entry block (DIRENTs block) for an EXISTING entry.
+ * 
+ * The parameter entry_block will be set with the number of the block of DIRENTs that
+ * contains entry_name block.
+ * 
+ * @param entry_name  The name of the entry.
+ * @param entry_block Entry block that contains entry_name block (output).
+ * @return T2FS_SUCCESS if found, T2FS_FAILURE otherwise.
+ */
+ReturnCode find_entry(string entry_name, WORD *entry_block);
 
 /**
  * Breaks the path into individual entries.

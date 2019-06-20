@@ -9,13 +9,21 @@
 #include "../../include/t2fs.h"
 #include <string.h>
 
+#define ENTRY_BLOCK_NUM  30
+#define ENTRY_BLOCK_NAME "ze_da_treta"
+
+extern WORD working_dir_block;
+extern unsigned int block_size;
+extern unsigned int entry_p_dir_blck;
+extern unsigned int dir_idx_adrs_bytes;
+
 // ================================================================================================
 //                                        SUPPORT FUNCTIONS
 // ================================================================================================
 
 void setup_test_block()
 {
-    BYTE* block = (BYTE*) malloc(sizeof(BYTE) * (SECTOR_SIZE * 2));
+    BYTE* block = (BYTE*) malloc(sizeof(BYTE) * block_size);
 
     unsigned char c = '0';
     int i;
@@ -33,6 +41,37 @@ void setup_test_block()
     }
 
     write_block(block, 10);
+}
+
+void setup_directory_block()
+{
+    BYTE* current_directory = (BYTE*) malloc(sizeof(BYTE) * block_size);
+    read_block(current_directory, working_dir_block);
+
+    WORD* dir_as_word = (WORD*) current_directory;
+    // First index is full.
+    // Second index is not allocated.
+    int i;
+    for (i = 0; i < dir_idx_adrs_bytes; i++)
+    {
+        if (i == 0)
+            dir_as_word[i] = 150;
+        else if (i == 1)
+            dir_as_word[i] = entry_p_dir_blck;
+        else
+            dir_as_word[i] = -1;
+    }
+
+    DIRENT2* the_entry = (DIRENT2*) malloc(sizeof(DIRENT2));
+    the_entry->indexBlock = ENTRY_BLOCK_NUM;
+    strcpy(the_entry->name, ENTRY_BLOCK_NAME);
+
+    DIRENT2* entry_block = (DIRENT2*) malloc(sizeof(DIRENT2) * entry_p_dir_blck);
+    for (i = 0; i < entry_p_dir_blck; i++)
+        entry_block[i] = *the_entry;
+    
+    BYTE* entry_block_as_byte = (BYTE*) entry_block;
+    write_block(entry_block_as_byte, ENTRY_BLOCK_NUM);    
 }
 
 
@@ -169,6 +208,35 @@ boolean test_GetEntryName_ValidCall()
     return FALSE;
 }
 
+boolean test_NewEntry_ValidCall()
+{
+    int index;
+
+    if (new_entry(ENTRY_BLOCK_NAME, &index) != T2FS_SUCCESS)
+        return FALSE;
+
+    if (index != 2)
+        return FALSE;
+
+    return TRUE;
+}
+
+boolean test_FindEntry_ValidCall()
+{
+    WORD index_block_number;
+
+    if (find_entry(ENTRY_BLOCK_NAME, &index_block_number) != T2FS_SUCCESS)
+        return FALSE;
+
+    if (index_block_number != ENTRY_BLOCK_NUM)
+    {
+        printf("Wrong block number: %d\n", index_block_number);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 // ================================================================================================
 //                                             THE TEST
 // ================================================================================================
@@ -179,6 +247,7 @@ void test_support()
     format2(2);
     boot2();
     setup_test_block();
+    setup_directory_block();
 
     // Run all test cases.
     run_test_case("ReadBlock_NullBuffer", test_ReadBlock_NullBuffer);
@@ -187,4 +256,6 @@ void test_support()
     run_test_case("ParsePath_ValidCalls", test_ParsePath_ValidCalls);
     run_test_case("GetEntryName_NullParameter", test_GetEntryName_NullParameter);
     run_test_case("GetEntryName_ValidCall", test_GetEntryName_ValidCall);
+    run_test_case("NewEntry_ValidCall", test_NewEntry_ValidCall);
+    run_test_case("FindEntry_ValidCall", test_FindEntry_ValidCall);
 }

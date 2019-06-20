@@ -1,3 +1,11 @@
+/* TO DO:
+  
+  *OpenDir then ReadDir and list the files in a directory
+  *finalize mkdir e chdir (refatorar e correções, ex: '..' ser concatenado)
+  *Create File and OpenFile
+  *Write File and Read File
+  *update the second word(size of dir. block) and mkdir with hashtable
+ */
 /**
  * Format a virtual disk.
  * 
@@ -124,13 +132,13 @@ int format2(int sectors_per_block)
 		{
 			if(j == bitmap_start)
 				first_sector[j] = (BYTE) 1; //sets the first bit of the bitmap to 1 (byte 1 is 0000 0001 = 1...), since
-			                         //the first block is used for the root itselt. The superblock space is not treated as a block
-									 //1 byte (8 numbers in b) to hexa is 2. 0000 0001 becomes 01
+			                         		//the first block is used for the root itselt. The superblock space is not treated as a block
+									 		//1 byte (8 numbers in b) to hexa is 2. 0000 0001 becomes 01
 
-									//colocar igual a 3? já pega o primeiro bloco de entry
+									
 			else
 				first_sector[j] = (BYTE) 0; //to actually visualize the bitmap area, set this to 1, this confirms the
-			                         //theory that the bitmap is correctly mapped to the number of blocks.
+			                         		//theory that the bitmap is correctly mapped to the number of blocks.
 		}
 		
 		j = 0;
@@ -174,18 +182,6 @@ int format2(int sectors_per_block)
 		__root_done = 0;
 		mkdir2("root");
 		printf("root done!\n");
-		//só falta testar pra ver se as infos no disco pós-mkdir estão certas...
-		//e isso se faz com open e read...
-		//também preciso escrever bitmap em setor e modular isso
-		//beleza
-		//fazer open e read dir
-		//depois create file
-		//open e write file
-		//e um read file
-		//e deu pra mim
-		//melhorar chdir2 também
-		//mas proximos passos definitivamente são open e read dir pra ver
-		//se tudo certo nos diretórios root
 		__boot_init = 0;
 		partition++;
 
@@ -241,18 +237,55 @@ int main()
 {
 	extern WORD working_dir_block;
 	extern _Bool __boot_init, __root_done;
-	char name[5];
+	char name[30];
 
 	format2(2);
-	getcwd2(name, 5);
+	getcwd2(name, 30);
 
 	printf("working dir: %s\n", name);
 	printf("workind dir block: %d\n", working_dir_block);
 	printf("boot init: %d\n", __boot_init);
 	printf("root done: %d\n", __root_done);
 
+	//limpar bloco, principalmente se vou na base dos -1 pra entrada...
+	//na real, mkdir já tá fazendo isso, né dã
+
 	printf("\n\n\n");
 	mkdir2("./newdir");
+	mkdir2("./otherdir");
+	mkdir2("./otherdir1");
+	mkdir2("./otherdir2");
+	mkdir2("./otherdir3");
+	mkdir2("./otherdir4");
+	mkdir2("./otherdir5");
+	mkdir2("./otherdir6");
+	mkdir2("./otherdir7");
+	mkdir2("./otherdir8");
+	mkdir2("./otherdir9");
+	mkdir2("./otherdir10");
+	mkdir2("./otherdir11");
+	mkdir2("./otherdir12");
+	mkdir2("./otherdir13");
+	mkdir2("./otherdir14");
+	mkdir2("./otherdir15");
+	mkdir2("./otherdir16");
+	mkdir2("./newdir/oi");
+	chdir2("./newdir");
+
+	getcwd2(name, 30);
+	printf("working dir: %s\n", name);
+	printf("workind dir block: %d\n", working_dir_block);
+	mkdir2("./WeMadeIt");
+	mkdir2("./itsover");
+
+	chdir2("./..");
+	getcwd2(name, 30);
+	printf("workind dir block: %d\n", working_dir_block);
+	printf("working dir: %s\n", name);
+	chdir2("./newdir/oi");
+	printf("workind dir block: %d\n", working_dir_block);
+	printf("working dir: %s\n", name);
+	mkdir2("./final");
 
 	return 0;
 }

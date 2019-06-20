@@ -8,6 +8,10 @@
  * @author Renan Kummer
  */
 
+#define BOOL unsigned short int
+#define TRUE 1
+#define FALSE 0
+
 typedef enum ReturnCode
 {
     T2FS_SUCCESS =  0,
@@ -19,6 +23,15 @@ typedef enum ReturnCode
     T2FS_DIRECTORY_IS_FULL    = -5,
     T2FS_INVALID_BLOCK_NUMBER = -6
 } ReturnCode;
+
+typedef enum FileTypes
+{
+    INVALIDO = 0x00,
+    REGULAR = 0x01,
+    BINARIO = 0x02,
+    DIRETORIO = 0x03
+
+} FileTypes;
 
 
 

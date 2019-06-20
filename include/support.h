@@ -19,9 +19,26 @@
 typedef char* string;
 
 
+typedef struct t2fs_openfile{
+    DIRENT2 record;
+    DWORD currentPointer; // Em bytes a partir do inicio do arquivo!
+} OpenFile;
+
+
 // ======================================================================================
 //                                       FUNCTIONS
 // ======================================================================================
+
+int find_target_dir(string target);
+
+void list_entries(BYTE *block);
+
+int get_entry_number(string name, WORD number);
+
+/*
+ *Funtion used to read an entry from a block
+ */
+void read_entry(BYTE *block, DIRENT2 *entry, int *iterator);
 
 /*
  *Funtion used to find the first available block in the bitmap
@@ -154,6 +171,47 @@ string* parse_path(string path, int *array_size);
  */
 string get_entry_name(string path);
 
+/**
+ * Tests if file handle is valid (handle < 0 || handle >= MAX_OPEN_FILES).
+ * 
+ * 
+ * @param handle The handle of the file.
+ * @return Boolean.
+ */
+BOOL isFileHandleValid(FILE2 handle);
+
+/**
+ * Tests if directory handle is valid (handle < 0 || handle >= MAX_OPEN_FILES).
+ * 
+ * 
+ * @param handle The handle of the directory.
+ * @return Boolean.
+ */
+BOOL isDirHandleValid(DIR2 handle);
+
+/**
+ * Initializes the array of strucutures for open files.
+ */
+void initializeOpenFiles();
+
+/**
+ * Initializes the array of strucutures for open directories.
+ */
+void initializeOpenDirs();
+
+/**
+ * Searches for free file handle.
+ * 
+ * @return File handle (if available) or error (no free handle).
+ */
+FILE2 getFreeFileHandle();
+
+/**
+ * Searches for free directory handle.
+ * 
+ * @return Directory handle (if available) or error (no free handle).
+ */
+DIR2 getFreeDirHandle();
 
 /*************************************************************************************************
  * RASCUNHO

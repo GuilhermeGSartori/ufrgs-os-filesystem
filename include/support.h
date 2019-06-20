@@ -126,10 +126,25 @@ string* parse_path(string path, int *array_size);
  */
 string get_entry_name(string path);
 
+/**
+ * Tests if file handle is valid (handle < 0 || handle >= MAX_OPEN_FILES).
+ * 
+ * 
+ * @param handle The handle of the file.
+ * @return Boolean.
+ */
 BOOL isFileHandleValid(FILE2 handle);
 
+/**
+ * Initializes array of strucutures for open files.
+ */
 void initializeOpenFiles();
 
+/**
+ * Searches for free file handle.
+ * 
+ * @return File handle (if available) or error (no free handle).
+ */
 FILE2 getFreeFileHandle();
 
 

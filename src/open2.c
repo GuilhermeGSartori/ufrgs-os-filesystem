@@ -1,11 +1,13 @@
 /**
  * Open an existing file in the disk.
  * 
- * @author ?
+ * @author Marlize Ramos
  */
 #include "../include/constants.h"
 #include "../include/t2fs.h"
 #include "../include/support.h"
+
+extern OpenFile openFiles[MAX_OPEN_FILES];
 
 FILE2 open2(char* filename)
 {

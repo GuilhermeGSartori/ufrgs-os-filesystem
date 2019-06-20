@@ -407,11 +407,10 @@ BOOL isFileHandleValid(FILE2 handle){
 void initializeOpenFiles(){
 	int i;
 	for(i = 0; i < MAX_OPEN_FILES; i++){
-		openFiles[i].record.fileType = INVALIDO;		//ainda não foi alocado, então FyleType = 0 (1-> regular, 2-> binário, 3-> diretório)
+		openFiles[i].record.fileType = INVALIDO;		
 	}
 }
 
-//busca handle livre para o arquivo
 FILE2 getFreeFileHandle(){
 	FILE2 freeHandle;
 	for(freeHandle = 0; freeHandle < MAX_OPEN_FILES; freeHandle++){

@@ -12,4 +12,5 @@
 // Holds the current working directory path.
 char working_dir_path[10000];
 
-OpenFile openFiles[MAX_OPEN_FILES];		// vetor de estruturas do tipo struct t2fs_openfile
+// Array of sructures containing open files
+OpenFile openFiles[MAX_OPEN_FILES];

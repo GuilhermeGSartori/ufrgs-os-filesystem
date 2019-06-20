@@ -1,3 +1,11 @@
+/* TO DO:
+  
+  *OpenDir then ReadDir and list the files in a directory
+  *finalize mkdir e chdir (refatorar e correções, ex: '..' ser concatenado)
+  *Create File and OpenFile
+  *Write File and Read File
+  *update the second word(size of dir. block) and mkdir with hashtable
+ */
 /**
  * Format a virtual disk.
  * 
@@ -59,7 +67,7 @@ int format2(int sectors_per_block)
 	unsigned int root_block = 1;
 	unsigned int entry_p_dir_blck, dir_idx_adrs_bytes, dir_idx_hash_bytes, dir_idx_adrs_number;
 	unsigned int dir_files_max, hash_size, dir_idx_leftovers;
-	unsigned int file_idx_entries, file_max_size;
+	unsigned int file_idx_entries, file_max_size, number_of_blocks;
 	
 	/*directory definitions*/
 	entry_p_dir_blck = block_size/sizeof(DIRENT2);//the number of file entries that a dir. block can have
@@ -97,12 +105,16 @@ int format2(int sectors_per_block)
         *the next 4 bytes are used to store the number of entries in a regular file index block
         *the next 4 bytes are used to store the max. size in bytes of a regular file;
         *the next 4 bytes are used to store the block size in bytes
+        *the next 4 bytes are used to store the first superblock sector
+        *the next 4 bytes are used to store the official size in block of the partition
 	*/
 
 	for(i = 0; i < partition_count; i++)
 	{
+		number_of_blocks = (partition_size[i]/8)*8;//since the blocks needs to be a multiple of 8 (for the bitmap)
+		                                           //some blocks can be not used
 		bitmap_start = 8;
-		bitmap_end = (partition_size[i]/8) + bitmap_start;//511/8 = 63 e alguns quebrados... esses alguns quebrados são desconsiderados...
+		bitmap_end = (partition_size[i]/8) + bitmap_start;
 		BYTE *first_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);
 		BYTE *second_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);	
 
@@ -120,13 +132,13 @@ int format2(int sectors_per_block)
 		{
 			if(j == bitmap_start)
 				first_sector[j] = (BYTE) 1; //sets the first bit of the bitmap to 1 (byte 1 is 0000 0001 = 1...), since
-			                         //the first block is used for the root itselt. The superblock space is not treated as a block
-									 //1 byte (8 numbers in b) to hexa is 2. 0000 0001 becomes 01
+			                         		//the first block is used for the root itselt. The superblock space is not treated as a block
+									 		//1 byte (8 numbers in b) to hexa is 2. 0000 0001 becomes 01
 
-									//colocar igual a 3? já pega o primeiro bloco de entry
+									
 			else
 				first_sector[j] = (BYTE) 0; //to actually visualize the bitmap area, set this to 1, this confirms the
-			                         //theory that the bitmap is correctly mapped to the number of blocks.
+			                         		//theory that the bitmap is correctly mapped to the number of blocks.
 		}
 		
 		j = 0;
@@ -142,6 +154,7 @@ int format2(int sectors_per_block)
 		four_bytes_to_sector_array(second_sector, hash_size, &j);
 		four_bytes_to_sector_array(second_sector, dir_idx_leftovers, &j);
 
+
 		if(file_idx_entries <= partition_size[i])
 		{ 
 			four_bytes_to_sector_array(second_sector, file_idx_entries, &j);
@@ -156,6 +169,8 @@ int format2(int sectors_per_block)
 		}
 
 		four_bytes_to_sector_array(second_sector, block_size, &j);
+		four_bytes_to_sector_array(second_sector, start[i], &j);//the first sector of the superblock
+		four_bytes_to_sector_array(second_sector, number_of_blocks, &j);
 		
 		write_sector(start[i], first_sector);//start is the sector number of the first sector of the superblock
 		write_sector(start[i]+1, second_sector);
@@ -174,16 +189,16 @@ int format2(int sectors_per_block)
 	__root_done = 1;
 	partition = 0;
 	boot2();
-	//open2(root)
+	chdir2("root\0");
 
 
 
     //debugging:
     /*HashTable ht[dir_files_max];
    	for(i = 0; i < dir_files_max; i++)
-       	ht[j].name[0] = '\0';
+     	ht[j].name[0] = '\0';
 	printf("version: %x\n", version);
-	printf("number of partitions: %d\n", partition_count);
+ 	printf("number of partitions: %d\n", partition_count);
 	printf("partition 1 with name %s size in blocks: %d\n", partition_names[0], (partition_size[0]/8)*8);
 	printf("partition 2 with name %s size in blocks: %d\n", partition_names[1], (partition_size[1]/8)*8);
 	printf("partition 3 with name %s size in blocks: %d\n", partition_names[2], (partition_size[2]/8)*8);
@@ -216,4 +231,61 @@ int format2(int sectors_per_block)
 	*/
 
     return 0;
+}
+
+int main()
+{
+	extern WORD working_dir_block;
+	extern _Bool __boot_init, __root_done;
+	char name[30];
+
+	format2(2);
+	getcwd2(name, 30);
+
+	printf("working dir: %s\n", name);
+	printf("workind dir block: %d\n", working_dir_block);
+	printf("boot init: %d\n", __boot_init);
+	printf("root done: %d\n", __root_done);
+
+	//limpar bloco, principalmente se vou na base dos -1 pra entrada...
+	//na real, mkdir já tá fazendo isso, né dã
+
+	printf("\n\n\n");
+	mkdir2("./newdir");
+	mkdir2("./otherdir");
+	mkdir2("./otherdir1");
+	mkdir2("./otherdir2");
+	mkdir2("./otherdir3");
+	mkdir2("./otherdir4");
+	mkdir2("./otherdir5");
+	mkdir2("./otherdir6");
+	mkdir2("./otherdir7");
+	mkdir2("./otherdir8");
+	mkdir2("./otherdir9");
+	mkdir2("./otherdir10");
+	mkdir2("./otherdir11");
+	mkdir2("./otherdir12");
+	mkdir2("./otherdir13");
+	mkdir2("./otherdir14");
+	mkdir2("./otherdir15");
+	mkdir2("./otherdir16");
+	mkdir2("./newdir/oi");
+	chdir2("./newdir");
+
+	getcwd2(name, 30);
+	printf("working dir: %s\n", name);
+	printf("workind dir block: %d\n", working_dir_block);
+	mkdir2("./WeMadeIt");
+	mkdir2("./itsover");
+
+	chdir2("./..");
+	getcwd2(name, 30);
+	printf("workind dir block: %d\n", working_dir_block);
+	printf("working dir: %s\n", name);
+	chdir2("./newdir/oi");
+	printf("workind dir block: %d\n", working_dir_block);
+	printf("working dir: %s\n", name);
+	mkdir2("./final");
+
+	return 0;
 }

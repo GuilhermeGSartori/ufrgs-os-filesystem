@@ -17,7 +17,7 @@ typedef unsigned int DWORD;
 /** Registro com as informações da entrada de diretório, lida com readdir2 */
 #define MAX_FILE_NAME_SIZE 22
 #define MAX_OPEN_FILES 10
-#define MAX_OPEN_DIRS 
+#define MAX_OPEN_DIRS 10
 
 typedef struct {
     char    name[MAX_FILE_NAME_SIZE+1]; /* Nome do arquivo cuja entrada foi lida do disco                      */
@@ -29,7 +29,8 @@ typedef struct {
 
 typedef struct{
 
-	char name[7];
+	char name[5];
+	WORD block;
 
 } HashTable;
 //hash table vai ser assim... vetor de hashtables vai ser declarado
@@ -42,6 +43,7 @@ typedef struct{
 //de suport.
 //considerar /0 pra evitar ter que ter certeza que é o mesmo.
 //vai saber de cara... só ler a key do hash
+
 
 
 #pragma pack(pop)

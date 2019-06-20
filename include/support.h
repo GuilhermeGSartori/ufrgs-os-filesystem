@@ -18,16 +18,40 @@
 // Alias for C strings.
 typedef char* string;
 
+
 typedef struct t2fs_openfile{
-	DIRENT2 record;
-	DWORD currentPointer; // Em bytes a partir do inicio do arquivo!
+    DIRENT2 record;
+    DWORD currentPointer; // Em bytes a partir do inicio do arquivo!
 } OpenFile;
+
 
 // ======================================================================================
 //                                       FUNCTIONS
 // ======================================================================================
 
-/**
+int find_target_dir(string target);
+
+void list_entries(BYTE *block);
+
+int get_entry_number(string name, WORD number);
+
+/*
+ *Funtion used to read an entry from a block
+ */
+void read_entry(BYTE *block, DIRENT2 *entry, int *iterator);
+
+/*
+ *Funtion used to find the first available block in the bitmap
+ */
+int free_block_bit();
+
+/*
+ *Funtion used to verify if the parameter matches with the pattern used for
+ *setting the working directory to the root directory
+ */
+int check_if_root(char *name);
+
+/*
  *Funtion used to save a DIRENT2 structure (or any other structure) in a array of bytes
  *the iterator is the position of the first byte to be modified
  */

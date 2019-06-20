@@ -9,20 +9,21 @@
 #include <string.h>
 
 /*
- * Global Variables Declaration
+ * Global Variables for Boot Declaration
  * When used, they need to be declares in the files
  * that require them. Using "extern <type> <name>"
+ * put then in the global variables files... or not...
 */
 
-_Bool __boot_init = 0;
-_Bool __root_done = 1;//aplica o mkdir pra cada partição depois deixa isso 1...
-int partition = 0;
-unsigned int bitmap_start = 0, bitmap_end = 0;
-unsigned int sectors_per_block = 0, root_sector = 0, partition_end = 0, root_block = 0, entry_p_dir_blck = 0, dir_idx_adrs_bytes = 0;
-unsigned int dir_idx_hash_bytes = 0, dir_idx_adrs_number = 0, dir_files_max = 0, hash_size = 0, dir_idx_leftovers = 0;
-unsigned int file_idx_entries = 0, file_max_size = 0, block_size = 0;
-unsigned int information[14];
-BYTE *bitmap;
+extern _Bool __boot_init;
+extern _Bool __root_done;
+extern int partition;
+extern unsigned int bitmap_start, bitmap_end, superblock_start, number_of_blocks;
+extern unsigned int sectors_per_block, root_sector, partition_end, root_block, entry_p_dir_blck, dir_idx_adrs_bytes;
+extern unsigned int dir_idx_hash_bytes, dir_idx_adrs_number, dir_files_max, hash_size, dir_idx_leftovers;
+extern unsigned int file_idx_entries, file_max_size, block_size;
+extern unsigned int information[16];
+extern BYTE *bitmap;
 
 
 #define SecMBR 0
@@ -86,7 +87,7 @@ int boot2()
 	}
 
 	i_byte_adrs = 0;
-	for(i = 0; i < 14; i++)
+	for(i = 0; i < 16; i++)
 	{
 		read_big_DWORD(info_sector, &information[i], i_byte_adrs);
 		i_byte_adrs += 4;
@@ -108,6 +109,8 @@ int boot2()
     //printf("READ -> the real number of entries in a reg. file index  (also the max number of blocks): %d\n", file_idx_entries);
     //printf("READ -> the real max. size in bytes of a file: %d\n", file_max_size);
     //printf("READ -> the size in bytes of a single block: %d\n", block_size);
+    printf("READ -> superblock start: %d\n", superblock_start);
+    printf("READ -> number_of_blocks: %d\n", number_of_blocks);
 
 	//colocar o brother no root 0, sempre que fizer boot, troca de partição
 	//e isso acontece quando faz cd .. estando no root
@@ -198,29 +201,21 @@ void global_initialization(unsigned int *information)
 	file_idx_entries = information[11];
 	file_max_size = information[12];
 	block_size = information[13];
+	superblock_start = information[14];
+	number_of_blocks = information[15];
 }
 
-//a proxima função é essa só que refatorada, tá mto mais lógica e fácil de entender agora
-//essa que tá comentada é mto satânica pro meu gosto
-/*void four_bytes_to_sector_array(BYTE *sector, unsigned int info, int *iterator, int position)
-{
-	//the loops is used to store 4 bytes of unsigned ints to 4 single bytes (to save in the disk)
-	//big endian storing
-	for(*iterator = *iterator; *iterator < sizeof(unsigned int) * position; (*iterator)++)
-			sector[*iterator] = (info) >> (24-(8*((*iterator) - sizeof(unsigned int)*(position-1)))) & 0xFF;
-	//não colocar (BYTE) antes da info... por algum motivo dá overflow (?)
-}*/
 
 void four_bytes_to_sector_array(BYTE *sector, unsigned int info, int *iterator)
 {
-	//the loops is used to store 4 bytes of unsigned ints to 4 single bytes (to save in the disk)
+	//the loop is used to store 4 bytes of unsigned ints to 4 single bytes (to save in the disk)
 	//big endian storing
 	int i = 0;
 	int j = (*iterator);
 	for(*iterator = *iterator; *iterator < j + sizeof(unsigned int); (*iterator)++)
 	{
-			sector[*iterator] = (info) >> (24-(8*i)) & 0xFF;
-			i++;
+		sector[*iterator] = (info) >> (24-(8*i)) & 0xFF;
+		i++;
 	}
 	//não colocar (BYTE) antes da info... por algum motivo dá overflow (?)
 }
@@ -260,6 +255,7 @@ int ht_to_bytes_array(BYTE *array, HashTable *ht, int *iterator)
 			array[*iterator] = ht[i].name[k];
 			(*iterator)++;
 		}
+		two_bytes_to_bytes_array(array, ht[i].block, iterator);
 	}
 
 	for(*iterator = *iterator; *iterator < block_size; (*iterator)++)
@@ -305,10 +301,33 @@ void dirent_to_bytes_array(BYTE *block, DIRENT2 entry, int *iterator)
 	for(i = 0; i < sizeof(entry); i++)
 	{
 		//printf("%d ", i);
-		block[*iterator] = *entry_bytes + i;
+		//printf("Ta: %c\n", *(entry_bytes + i));
+		block[*iterator] = *(entry_bytes + i);
 		(*iterator)++;
 	}
 	//printf("\n");
+}
+
+void read_entry(BYTE *block, DIRENT2 *entry, int *iterator)
+{
+	BYTE *entry_bytes = (BYTE*) entry;
+	int i;
+	for(i = 0; i < sizeof(DIRENT2); i++)
+	{
+		//printf("%d ", i);
+		*(entry_bytes + i) = block[*iterator];
+		(*iterator)++;
+	}
+	//printf("\n");
+}
+
+
+int check_if_root(char *name)
+{
+	if(name[0] == 'r' && name[1] == 'o' && name[2] == 'o' && name[3] == 't' && name[4] == '\0')
+		return 0;
+
+	return -1;
 }
 
 ReturnCode read_block(BYTE *block, WORD block_number)
@@ -397,7 +416,164 @@ string get_entry_name(string path)
 		return path_entries[number_of_entries - 1];
 }
 
+
+int get_entry_number(string name, WORD number)
+{
+	return number - 1; 
+}
+
+
+int free_block_bit()
+{
+	int i, j, k;
+	extern BYTE *bitmap;
+	extern unsigned int bitmap_end, bitmap_start;
+	int block_range_s;
+	BYTE *bitmap_sector = (BYTE *) malloc(sizeof(BYTE ) * SECTOR_SIZE);
+
+	i = 0;
+
+	while(bitmap[i] == 255 && i < (bitmap_end - bitmap_start))
+			i++;
+
+	if(i == (bitmap_end - bitmap_start))
+	{
+		printf("DISK IS FULL!\n");
+		return -1;
+	}
+
+	block_range_s = (i*8)+1;
+	printf("block range %d\n", block_range_s);
+
+	j = 0;
+	while((bitmap[i] & (1 << j)) != 0)
+		j++;
+
+	bitmap[i] |= 1 << j;
+
+	printf("byte %d and bit %d.\n", i, j);
+
+
+	for(k = 0; k < sizeof(BYTE) * SECTOR_SIZE; k++)
+		bitmap_sector[k] = 0;
+
+	k = 0;
+	four_bytes_to_sector_array(bitmap_sector, bitmap_start, &k);
+	four_bytes_to_sector_array(bitmap_sector, bitmap_end, &k);
+
+	i = 0;
+	for(k = (int) bitmap_start; k < (int) bitmap_end; k++)
+	{
+		bitmap_sector[k] = bitmap[i];
+		i++;
+	}
+
+	write_sector(superblock_start, bitmap_sector);//start is the sector number of the first sector of the superblock
+
+	return block_range_s + j;
+}
+
+
+void list_entries(BYTE *block)//basicamente readdir
+{
+	extern unsigned int dir_files_max, entry_p_dir_blck;
+	int entry_number = 0, index_entry, /*index_count,*/ j, i;
+	BYTE *entry_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	DIRENT2 entry;
+
+	while(entry_number < dir_files_max)
+	{
+		//é o bloco root, primeiro de entries está salvo no 2 sim
+		//tenho que atualizar index_entry...
+		//entre blocos, não da dirent
+		index_entry = block[(entry_number/entry_p_dir_blck) * 4] << 8 | block[((entry_number/entry_p_dir_blck) * 4)+1];
+		//index_count = block[((entry_number/entry_p_dir_blck) * 4)+2] << 8 | block[((entry_number/entry_p_dir_blck) * 4)+3];
+
+
+		if(index_entry == 65535)//unsigned word -1
+		{
+			//printf("entry vazia\n");
+			entry_number += entry_p_dir_blck;
+		}
+		else
+		{
+			read_block(entry_block, index_entry);
+			j = 0;
+			for(i = 0; i < entry_p_dir_blck; i++)
+			{
+				//printf("i: %d\n", i);
+				read_entry(entry_block, &entry, &j);
+				if(entry.fileType != 0)
+				{
+					printf("\n");
+					printf("nome do arquivo: %s\n", entry.name);
+					printf("tipo do arquivo: %d\n", entry.fileType);
+					printf("bloco do arquivo: %d\n", entry.indexBlock);
+					if((strcmp(entry.name, "..\0") != 0) && entry.fileType == 3)
+						printf("numero de entradas: %d\n", entry.numberOfEntries);
+					if(entry.fileType == 1 || entry.fileType == 2)
+						printf("tamanho do arquivo: %d\n", entry.fileSize);
+					printf("\n");
+				}
+			}
+			entry_number += entry_p_dir_blck;
+		}
+
+	}
+
+
+}
+
+int find_target_dir(string target)
+{
+	extern unsigned int dir_files_max, entry_p_dir_blck;
+	extern WORD temp_dir_block;
+	int entry_number = 0, index_entry, /*index_count,*/ j, i;
+	BYTE *index_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	BYTE *entry_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	DIRENT2 entry;
+	read_block(index_block, temp_dir_block);
+
+	while(entry_number < dir_files_max)
+	{
+		//é o bloco root, primeiro de entries está salvo no 2 sim
+		//tenho que atualizar index_entry...
+		//entre blocos, não da dirent
+		index_entry = index_block[(entry_number/entry_p_dir_blck) * 4] << 8 | index_block[((entry_number/entry_p_dir_blck) * 4)+1];
+		//index_count = block[((entry_number/entry_p_dir_blck) * 4)+2] << 8 | block[((entry_number/entry_p_dir_blck) * 4)+3];
+
+
+		if(index_entry == 65535)//unsigned word -1
+		{
+			//printf("entry vazia\n");
+			entry_number += entry_p_dir_blck;
+		}
+		else
+		{
+			read_block(entry_block, index_entry);
+			j = 0;
+			for(i = 0; i < entry_p_dir_blck; i++)
+			{
+				read_entry(entry_block, &entry, &j);
+				if(entry.fileType != 0)
+				{
+					if(strcmp(target, entry.name) == 0)
+					{
+						temp_dir_block = entry.indexBlock;
+						return 0;
+					}
+				}
+			}
+			entry_number += entry_p_dir_blck;
+		}
+
+	}
+
+	return -1;
+}
+
 BOOL isFileHandleValid(FILE2 handle){
+	extern OpenFile openFiles[MAX_OPEN_FILES];
 	if(handle < 0 || handle >= MAX_OPEN_FILES || (openFiles[handle].record.fileType != REGULAR && openFiles[handle].record.fileType != BINARIO))
 		return FALSE;
 	else
@@ -405,13 +581,15 @@ BOOL isFileHandleValid(FILE2 handle){
 }
 
 BOOL isDirHandleValid(DIR2 handle){
-	if(handle < 0 || handle >= MAX_OPEN_DIR || openDirs[handle].record.fileType != DIRETORIO)
+	extern OpenFile openDirs[MAX_OPEN_FILES];
+	if(handle < 0 || handle >= MAX_OPEN_DIRS || openDirs[handle].record.fileType != DIRETORIO)
 		return FALSE;
 	else
 		return TRUE;
 }
 
 void initializeOpenFiles(){
+	extern OpenFile openFiles[MAX_OPEN_FILES];
 	int i;
 	for(i = 0; i < MAX_OPEN_FILES; i++){
 		openFiles[i].record.fileType = INVALIDO;		
@@ -420,13 +598,15 @@ void initializeOpenFiles(){
 
 void initializeOpenDirs(){
 	int i;
-	for(i = 0; i < MAX_OPEN_DIR; i++){
+	extern OpenFile openDirs[MAX_OPEN_FILES];
+	for(i = 0; i < MAX_OPEN_DIRS; i++){
 		openDirs[i].record.fileType = INVALIDO;
 	}
 }
 
 FILE2 getFreeFileHandle(){
 	FILE2 freeHandle;
+	extern OpenFile openFiles[MAX_OPEN_FILES];
 	for(freeHandle = 0; freeHandle < MAX_OPEN_FILES; freeHandle++){
 		if(openFiles[freeHandle].record.fileType == INVALIDO)
 			return freeHandle;
@@ -436,7 +616,8 @@ FILE2 getFreeFileHandle(){
 
 DIR2 getFreeDirHandle(){
 	DIR2 freeHandle;
-	for(freeHandle = 0; freeHandle < MAX_OPEN_DIR; freeHandle++){
+	extern OpenFile openDirs[MAX_OPEN_FILES];
+	for(freeHandle = 0; freeHandle < MAX_OPEN_DIRS; freeHandle++){
 		if(openDirs[freeHandle].record.fileType == INVALIDO)
 			return freeHandle;
 	}

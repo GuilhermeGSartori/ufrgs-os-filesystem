@@ -9,6 +9,9 @@
 
 int closedir2(DIR2 handle)
 {
+	extern _Bool __boot_init;
+	extern OpenFile openDirs[MAX_OPEN_DIRS];
+
     if(__boot_init == 0)
 		boot2();
 

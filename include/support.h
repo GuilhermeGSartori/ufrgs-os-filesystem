@@ -22,12 +22,15 @@ typedef char* string;
 typedef struct t2fs_openfile{
     DIRENT2 record;
     DWORD currentPointer; // Em bytes a partir do inicio do arquivo!
+    DWORD currentEntry;
 } OpenFile;
 
 
 // ======================================================================================
 //                                       FUNCTIONS
 // ======================================================================================
+
+int entry_to_record(string target, DIRENT2 *record);
 
 int find_target_dir(string target);
 

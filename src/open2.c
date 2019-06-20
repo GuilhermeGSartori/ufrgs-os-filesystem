@@ -8,6 +8,7 @@
 #include "../include/support.h"
 
 extern OpenFile openFiles[MAX_OPEN_FILES];
+extern _Bool __boot_init;
 
 FILE2 open2(char* filename)
 {
@@ -18,8 +19,8 @@ FILE2 open2(char* filename)
 	if(freeHandle == T2FS_FAILURE) 
 		return T2FS_NO_FREE_HANDLE;  // quantidade máxima permitida de arquivos abertos (10) foi alcançada
 
-	DIRENT2 record;
-	if(getRecordFromPath(filename, &record) != 0){		//???????????????
+	//DIRENT2 record;
+	/*if(getRecordFromPath(filename, &record) != 0){		//???????????????
 		return T2FS_FAILURE;
 	}
 
@@ -27,7 +28,7 @@ FILE2 open2(char* filename)
 		openFiles[freeHandle].record = record;
 		openFiles[freeHandle].currentPointer = 0;
 		return freeHandle;
-	}
+	}*/
 	return T2FS_FAILURE;    
 
 }

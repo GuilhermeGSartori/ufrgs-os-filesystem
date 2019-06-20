@@ -11,6 +11,7 @@
 
 int chdir2(char *pathname)
 {
+	extern _Bool __boot_init; 
 	extern char working_dir_path[10000];
 	extern unsigned int root_block;
 	extern WORD working_dir_block, temp_dir_block;
@@ -28,17 +29,18 @@ int chdir2(char *pathname)
 
 	else
 	{
+		if(__boot_init == 0)
+			boot2();
+
 		string *path = parse_path(pathname, &path_size);
 		if(path[0][0] != '.')
 		{
 			printf("path invalido, comece com './'!\n");
 			return -1;
 		}
-		printf("saindo de %s\n", path[0]);
 		temp_dir_block = working_dir_block;
 		for(i = 1; i < path_size; i++)
 		{
-			printf("movendo para %s\n", path[i]);
 			if(find_target_dir(path[i]) != 0)
 			{
 				printf("path invalido '%s' nao existe!\n", path[i]);

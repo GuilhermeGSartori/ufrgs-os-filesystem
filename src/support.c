@@ -538,7 +538,7 @@ ReturnCode find_entry(string entry_name, WORD *entry_block)
 						this_entry_block_as_dirent[j].indexBlock > 0x00 &&
 						strcmp(this_entry_block_as_dirent[j].name, entry_name) == 0)
 					{
-						entry_block = dir_index_blocks[i];
+						*entry_block = dir_index_blocks[i];
 						return T2FS_SUCCESS;
 					}
 				}

@@ -26,7 +26,8 @@ typedef struct {
 
 typedef struct{
 
-	char name[7];
+	char name[5];
+	WORD block;
 
 } HashTable;
 //hash table vai ser assim... vetor de hashtables vai ser declarado

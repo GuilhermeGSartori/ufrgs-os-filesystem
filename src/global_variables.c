@@ -14,7 +14,6 @@
 
 // Holds the current working directory path.
 char working_dir_path[10000];
-<<<<<<< HEAD
 WORD working_dir_block, temp_dir_block;
 _Bool __boot_init = 0;
 _Bool __root_done = 1;//aplica o mkdir pra cada partição depois deixa isso 1...

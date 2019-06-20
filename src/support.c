@@ -573,6 +573,7 @@ int find_target_dir(string target)
 }
 
 BOOL isFileHandleValid(FILE2 handle){
+	extern OpenFile openFiles[MAX_OPEN_FILES];
 	if(handle < 0 || handle >= MAX_OPEN_FILES || (openFiles[handle].record.fileType != REGULAR && openFiles[handle].record.fileType != BINARIO))
 		return FALSE;
 	else
@@ -580,13 +581,15 @@ BOOL isFileHandleValid(FILE2 handle){
 }
 
 BOOL isDirHandleValid(DIR2 handle){
-	if(handle < 0 || handle >= MAX_OPEN_DIR || openDirs[handle].record.fileType != DIRETORIO)
+	extern OpenFile openDirs[MAX_OPEN_FILES];
+	if(handle < 0 || handle >= MAX_OPEN_DIRS || openDirs[handle].record.fileType != DIRETORIO)
 		return FALSE;
 	else
 		return TRUE;
 }
 
 void initializeOpenFiles(){
+	extern OpenFile openFiles[MAX_OPEN_FILES];
 	int i;
 	for(i = 0; i < MAX_OPEN_FILES; i++){
 		openFiles[i].record.fileType = INVALIDO;		
@@ -595,13 +598,15 @@ void initializeOpenFiles(){
 
 void initializeOpenDirs(){
 	int i;
-	for(i = 0; i < MAX_OPEN_DIR; i++){
+	extern OpenFile openDirs[MAX_OPEN_FILES];
+	for(i = 0; i < MAX_OPEN_DIRS; i++){
 		openDirs[i].record.fileType = INVALIDO;
 	}
 }
 
 FILE2 getFreeFileHandle(){
 	FILE2 freeHandle;
+	extern OpenFile openFiles[MAX_OPEN_FILES];
 	for(freeHandle = 0; freeHandle < MAX_OPEN_FILES; freeHandle++){
 		if(openFiles[freeHandle].record.fileType == INVALIDO)
 			return freeHandle;
@@ -611,7 +616,8 @@ FILE2 getFreeFileHandle(){
 
 DIR2 getFreeDirHandle(){
 	DIR2 freeHandle;
-	for(freeHandle = 0; freeHandle < MAX_OPEN_DIR; freeHandle++){
+	extern OpenFile openDirs[MAX_OPEN_FILES];
+	for(freeHandle = 0; freeHandle < MAX_OPEN_DIRS; freeHandle++){
 		if(openDirs[freeHandle].record.fileType == INVALIDO)
 			return freeHandle;
 	}

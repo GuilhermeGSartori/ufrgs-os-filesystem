@@ -26,9 +26,9 @@ typedef enum ReturnCode
 
 typedef enum FileTypes
 {
-    INVALIDO = 0x00
-    REGULAR = 0x01
-    BINARIO = 0x02
+    INVALIDO = 0x00,
+    REGULAR = 0x01,
+    BINARIO = 0x02,
     DIRETORIO = 0x03
 
 } FileTypes;

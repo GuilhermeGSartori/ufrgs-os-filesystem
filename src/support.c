@@ -94,6 +94,8 @@ int boot2()
 	}
 
 	global_initialization(information);
+	initializeOpenFiles();
+	initializeOpenDirs();
 
 	//printf("READ -> sectors per block: %d\n", sectors_per_block);
 	//printf("READ -> root sector: %d\n", root_sector);
@@ -109,36 +111,9 @@ int boot2()
     //printf("READ -> the real number of entries in a reg. file index  (also the max number of blocks): %d\n", file_idx_entries);
     //printf("READ -> the real max. size in bytes of a file: %d\n", file_max_size);
     //printf("READ -> the size in bytes of a single block: %d\n", block_size);
-    printf("READ -> superblock start: %d\n", superblock_start);
-    printf("READ -> number_of_blocks: %d\n", number_of_blocks);
+    //printf("READ -> superblock start: %d\n", superblock_start);
+    //printf("READ -> number_of_blocks: %d\n", number_of_blocks);
 
-	//colocar o brother no root 0, sempre que fizer boot, troca de partição
-	//e isso acontece quando faz cd .. estando no root
-	//ao trocar, incrementa o número da partição e faz o boot
-	//format chama o boot, como global tá em zero, vai colocar em zero...
-	//format só faz os diretórios, boot te coloca no dir
-	//format pra fazer o raiz, mete boot_done = 1, depois de tudo mete = 0
-	//pra não fazer o boot...
-	//boot vem depois
-	//no final da format
-
-	//começar a modular...
-
-	/*
-	BYTE bitmapper[bitmap_end - bitmap_start];
-	printf("%d\n", bitmap_end - bitmap_start);
-	bitmapper[70] = 20;
-	printf("%d\n", bitmapper[70]);
-	//pq isso é possível e não tá reclamando wtf?
-	bitmap[0] = 1;
-	bitmap[62] = 2;
-	bitmap[70] = 3;
-	printf("%d\n", bitmap[0]);
-	printf("%d\n", bitmap[62]);
-	printf("%d\n", bitmap[10240]);// isso não deveria dar certo...
-	//printf("%d\n", bitmap[10240020]);// isso dá seg fault...
-	printf("\n");
-	*/
 	__boot_init = 1;
 
 	return 0;
@@ -240,10 +215,6 @@ int ht_to_bytes_array(BYTE *array, HashTable *ht, int *iterator)
 	int i, k;
 	HashTable size;
 	size.name[0] = '\0';
-	//é para a hash table ter sempre o tamanho menor que o definido
-	//pelo separação de bytes, preencho o necessário e depois, o que sobrar
-	//preencho com -1, daí tu sabe que isso NÃO faz parte da hash
-	//ht SEMPRE depois das entradas pra blocos de dir
 
 	if(sizeof(ht) > dir_idx_hash_bytes)
 		return -1;
@@ -443,15 +414,12 @@ int free_block_bit()
 	}
 
 	block_range_s = (i*8)+1;
-	printf("block range %d\n", block_range_s);
 
 	j = 0;
 	while((bitmap[i] & (1 << j)) != 0)
 		j++;
 
 	bitmap[i] |= 1 << j;
-
-	printf("byte %d and bit %d.\n", i, j);
 
 
 	for(k = 0; k < sizeof(BYTE) * SECTOR_SIZE; k++)
@@ -611,6 +579,51 @@ int find_target_dir(string target)
 
 	while(entry_number < dir_files_max)
 	{
+		index_entry = index_block[(entry_number/entry_p_dir_blck) * 4] << 8 | index_block[((entry_number/entry_p_dir_blck) * 4)+1];
+		//index_count = block[((entry_number/entry_p_dir_blck) * 4)+2] << 8 | block[((entry_number/entry_p_dir_blck) * 4)+3];
+
+
+		if(index_entry == 65535)//unsigned word -1
+		{
+			//printf("entry vazia\n");
+			entry_number += entry_p_dir_blck;
+		}
+		else
+		{
+			read_block(entry_block, index_entry);
+			j = 0;
+			for(i = 0; i < entry_p_dir_blck; i++)
+			{
+				read_entry(entry_block, &entry, &j);
+				if(entry.fileType != 0)
+				{
+					if(strcmp(target, entry.name) == 0)
+					{
+						temp_dir_block = entry.indexBlock;
+						return 0;
+					}
+				}
+			}
+			entry_number += entry_p_dir_blck;
+		}
+
+	}
+
+	return -1;
+}
+
+int entry_to_record(string target, DIRENT2 *record)
+{
+	extern unsigned int dir_files_max, entry_p_dir_blck;
+	extern WORD temp_dir_block;
+	int entry_number = 0, index_entry, /*index_count,*/ j, i;
+	BYTE *index_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	BYTE *entry_block = (BYTE *) malloc(sizeof(BYTE ) * block_size);
+	DIRENT2 entry;
+	read_block(index_block, temp_dir_block);
+
+	while(entry_number < dir_files_max)
+	{
 		//é o bloco root, primeiro de entries está salvo no 2 sim
 		//tenho que atualizar index_entry...
 		//entre blocos, não da dirent
@@ -634,7 +647,10 @@ int find_target_dir(string target)
 				{
 					if(strcmp(target, entry.name) == 0)
 					{
-						temp_dir_block = entry.indexBlock;
+						strcpy(record->name, entry.name);
+						record->fileType = entry.fileType;
+						record->indexBlock = entry.indexBlock;
+						record->numberOfEntries = entry.numberOfEntries;
 						return 0;
 					}
 				}

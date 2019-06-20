@@ -1,6 +1,5 @@
 /* TO DO:
   
-  *OpenDir then ReadDir and list the files in a directory
   *finalize mkdir e chdir (refatorar e correções, ex: '..' ser concatenado)
   *Create File and OpenFile
   *Write File and Read File
@@ -17,6 +16,7 @@
 #include "../include/support.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SecMBR 0
 
@@ -178,10 +178,8 @@ int format2(int sectors_per_block)
 		free(first_sector);
 		free(second_sector);
 
-		printf("\n\nStarting mkdir2 for roots, partition %d\n", partition);
 		__root_done = 0;
 		mkdir2("root");
-		printf("root done!\n");
 		__boot_init = 0;
 		partition++;
 
@@ -232,62 +230,3 @@ int format2(int sectors_per_block)
 
     return 0;
 }
-
-/*
-int main()
-{
-	extern WORD working_dir_block;
-	extern _Bool __boot_init, __root_done;
-	char name[30];
-
-	format2(2);
-	getcwd2(name, 30);
-
-	printf("working dir: %s\n", name);
-	printf("workind dir block: %d\n", working_dir_block);
-	printf("boot init: %d\n", __boot_init);
-	printf("root done: %d\n", __root_done);
-
-	//limpar bloco, principalmente se vou na base dos -1 pra entrada...
-	//na real, mkdir já tá fazendo isso, né dã
-
-	printf("\n\n\n");
-	mkdir2("./newdir");
-	mkdir2("./otherdir");
-	mkdir2("./otherdir1");
-	mkdir2("./otherdir2");
-	mkdir2("./otherdir3");
-	mkdir2("./otherdir4");
-	mkdir2("./otherdir5");
-	mkdir2("./otherdir6");
-	mkdir2("./otherdir7");
-	mkdir2("./otherdir8");
-	mkdir2("./otherdir9");
-	mkdir2("./otherdir10");
-	mkdir2("./otherdir11");
-	mkdir2("./otherdir12");
-	mkdir2("./otherdir13");
-	mkdir2("./otherdir14");
-	mkdir2("./otherdir15");
-	mkdir2("./otherdir16");
-	mkdir2("./newdir/oi");
-	chdir2("./newdir");
-
-	getcwd2(name, 30);
-	printf("working dir: %s\n", name);
-	printf("workind dir block: %d\n", working_dir_block);
-	mkdir2("./WeMadeIt");
-	mkdir2("./itsover");
-
-	chdir2("./..");
-	getcwd2(name, 30);
-	printf("workind dir block: %d\n", working_dir_block);
-	printf("working dir: %s\n", name);
-	chdir2("./newdir/oi");
-	printf("workind dir block: %d\n", working_dir_block);
-	printf("working dir: %s\n", name);
-	mkdir2("./final");
-
-	return 0;
-}
-*/

@@ -7,6 +7,9 @@
 #include "../include/t2fs.h"
 #include "../include/support.h"
 
+extern _Bool __boot_init;
+extern OpenFile openFiles[MAX_OPEN_FILES];
+
 int close2(FILE2 handle)
 {
     if(__boot_init == 0)

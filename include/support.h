@@ -1,3 +1,5 @@
+#ifndef UFRGS_OS_FILESYSTEM_INCLUDE_SUPPORT_H
+#define UFRGS_OS_FILESYSTEM_INCLUDE_SUPPORT_H
 /**
  * Support functions for T2FS library.
  * 
@@ -231,3 +233,5 @@ DIR2 getFreeDirHandle();
  * -> tipo de arquivo define se é 0 = dir, 1 = txt 2 = bin
  * -> se bin lê normal mas mete uns print em binário...
  *************************************************************************************************/ 
+
+#endif // UFRGS_OS_FILESYSTEM_INCLUDE_SUPPORT_H

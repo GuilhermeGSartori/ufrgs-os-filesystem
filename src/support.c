@@ -493,7 +493,7 @@ ReturnCode new_entry(string entry_name, int *index_to_entry_block)
 		int i;
 		for (i = 0; i < table_start; i += 2)
 		{
-			if (dir_index_blocks[i] == -1 || dir_index_blocks[i+1] < entry_p_dir_blck)
+			if (dir_index_blocks[i] == (WORD) -1 || dir_index_blocks[i+1] < (WORD) entry_p_dir_blck)
 			{
 				*index_to_entry_block = i;
 				return T2FS_SUCCESS;
@@ -525,7 +525,7 @@ ReturnCode find_entry(string entry_name, WORD *entry_block)
 		int j;
 		for (i = 0; i < table_start; i += 2)
 		{
-			if (dir_index_blocks[i] == -1 || dir_index_blocks[i+1] > 0)
+			if (dir_index_blocks[i] == (WORD) -1 || dir_index_blocks[i+1] > 0)
 			{
 				BYTE *this_entry_block_as_byte = (BYTE*) malloc(sizeof(BYTE) * block_size);
 				status = read_block(this_entry_block_as_byte, dir_index_blocks[i]);
@@ -534,7 +534,7 @@ ReturnCode find_entry(string entry_name, WORD *entry_block)
 				for (j = 0; j < entry_p_dir_blck; j++)
 				{
 					int dirent_first_byte = j * sizeof(DIRENT2);
-					if (this_entry_block_as_byte[dirent_first_byte] != -1 && 
+					if (this_entry_block_as_byte[dirent_first_byte] != (WORD) -1 && 
 						this_entry_block_as_dirent[j].indexBlock > 0x00 &&
 						strcmp(this_entry_block_as_dirent[j].name, entry_name) == 0)
 					{

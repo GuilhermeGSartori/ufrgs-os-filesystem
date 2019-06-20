@@ -55,15 +55,15 @@ void setup_directory_block()
     for (i = 0; i < dir_idx_adrs_bytes; i++)
     {
         if (i == 0)
-            dir_as_word[i] = 150;
+            dir_as_word[i] = (WORD) 150;
         else if (i == 1)
-            dir_as_word[i] = entry_p_dir_blck;
+            dir_as_word[i] = (WORD) entry_p_dir_blck;
         else
-            dir_as_word[i] = -1;
+            dir_as_word[i] = (WORD) -1;
     }
 
     DIRENT2* the_entry = (DIRENT2*) malloc(sizeof(DIRENT2));
-    the_entry->indexBlock = ENTRY_BLOCK_NUM;
+    the_entry->indexBlock = (WORD) ENTRY_BLOCK_NUM;
     strcpy(the_entry->name, ENTRY_BLOCK_NAME);
 
     DIRENT2* entry_block = (DIRENT2*) malloc(sizeof(DIRENT2) * entry_p_dir_blck);
@@ -71,7 +71,7 @@ void setup_directory_block()
         entry_block[i] = *the_entry;
     
     BYTE* entry_block_as_byte = (BYTE*) entry_block;
-    write_block(entry_block_as_byte, ENTRY_BLOCK_NUM);    
+    write_block(entry_block_as_byte, (WORD) ENTRY_BLOCK_NUM);    
 }
 
 
@@ -213,10 +213,16 @@ boolean test_NewEntry_ValidCall()
     int index;
 
     if (new_entry(ENTRY_BLOCK_NAME, &index) != T2FS_SUCCESS)
+    {
+        printf("NewEntry: Status != T2FS_SUCCESS");
         return FALSE;
+    }
 
     if (index != 2)
+    {
+        printf("NewEntry: Index != 2");
         return FALSE;
+    }
 
     return TRUE;
 }
@@ -226,7 +232,10 @@ boolean test_FindEntry_ValidCall()
     WORD index_block_number;
 
     if (find_entry(ENTRY_BLOCK_NAME, &index_block_number) != T2FS_SUCCESS)
+    {
+        printf("FindEntry: Status != T2FS_SUCCESS");
         return FALSE;
+    }
 
     if (index_block_number != ENTRY_BLOCK_NUM)
     {

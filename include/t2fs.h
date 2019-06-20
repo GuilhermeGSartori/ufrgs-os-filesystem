@@ -17,6 +17,8 @@ typedef unsigned int DWORD;
 /** Registro com as informações da entrada de diretório, lida com readdir2 */
 #define MAX_FILE_NAME_SIZE 22
 #define MAX_OPEN_FILES 10
+#define MAX_OPEN_DIRS 
+
 typedef struct {
     char    name[MAX_FILE_NAME_SIZE+1]; /* Nome do arquivo cuja entrada foi lida do disco                      */
     BYTE    fileType;                   /* Tipo do arquivo: regular (0x01), binario (0x02) ou diretório (0x03) */

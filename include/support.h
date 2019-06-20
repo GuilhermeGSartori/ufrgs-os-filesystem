@@ -136,9 +136,23 @@ string get_entry_name(string path);
 BOOL isFileHandleValid(FILE2 handle);
 
 /**
- * Initializes array of strucutures for open files.
+ * Tests if directory handle is valid (handle < 0 || handle >= MAX_OPEN_FILES).
+ * 
+ * 
+ * @param handle The handle of the directory.
+ * @return Boolean.
+ */
+BOOL isDirHandleValid(DIR2 handle);
+
+/**
+ * Initializes the array of strucutures for open files.
  */
 void initializeOpenFiles();
+
+/**
+ * Initializes the array of strucutures for open directories.
+ */
+void initializeOpenDirs();
 
 /**
  * Searches for free file handle.
@@ -147,6 +161,12 @@ void initializeOpenFiles();
  */
 FILE2 getFreeFileHandle();
 
+/**
+ * Searches for free directory handle.
+ * 
+ * @return Directory handle (if available) or error (no free handle).
+ */
+DIR2 getFreeDirHandle();
 
 /*************************************************************************************************
  * RASCUNHO

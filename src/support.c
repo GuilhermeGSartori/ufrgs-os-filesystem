@@ -404,6 +404,13 @@ BOOL isFileHandleValid(FILE2 handle){
 		return TRUE;
 }
 
+BOOL isDirHandleValid(DIR2 handle){
+	if(handle < 0 || handle >= MAX_OPEN_DIR || openDirs[handle].record.fileType != DIRETORIO)
+		return FALSE;
+	else
+		return TRUE;
+}
+
 void initializeOpenFiles(){
 	int i;
 	for(i = 0; i < MAX_OPEN_FILES; i++){
@@ -411,10 +418,26 @@ void initializeOpenFiles(){
 	}
 }
 
+void initializeOpenDirs(){
+	int i;
+	for(i = 0; i < MAX_OPEN_DIR; i++){
+		openDirs[i].record.fileType = INVALIDO;
+	}
+}
+
 FILE2 getFreeFileHandle(){
 	FILE2 freeHandle;
 	for(freeHandle = 0; freeHandle < MAX_OPEN_FILES; freeHandle++){
 		if(openFiles[freeHandle].record.fileType == INVALIDO)
+			return freeHandle;
+	}
+	return T2FS_FAILURE;
+}
+
+DIR2 getFreeDirHandle(){
+	DIR2 freeHandle;
+	for(freeHandle = 0; freeHandle < MAX_OPEN_DIR; freeHandle++){
+		if(openDirs[freeHandle].record.fileType == INVALIDO)
 			return freeHandle;
 	}
 	return T2FS_FAILURE;

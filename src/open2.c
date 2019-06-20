@@ -19,7 +19,7 @@ FILE2 open2(char* filename)
 		return T2FS_NO_FREE_HANDLE;  // quantidade máxima permitida de arquivos abertos (10) foi alcançada
 
 	DIRENT2 record;
-	if(getRecordFromPath(filename, &record) != 0){
+	if(getRecordFromPath(filename, &record) != 0){		//???????????????
 		return T2FS_FAILURE;
 	}
 
